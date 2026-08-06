@@ -1,0 +1,83 @@
+.gv {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--canvas);
+}
+
+.gv-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--canvas);
+}
+.gv-seg { flex: none; }
+.gv-sel {
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+}
+.gv-hops {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--dim);
+}
+.gv-hops input { width: 90px; }
+.gv-relfilter { display: flex; gap: 5px; flex-wrap: wrap; }
+.gv-chip {
+  font: inherit;
+  font-size: 11px;
+  color: var(--dim);
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 2px 9px;
+  cursor: pointer;
+}
+.gv-chip.on { color: #fff; background: var(--accent); border-color: transparent; }
+.gv-count { margin-left: auto; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+.gv-canvas { flex: 1; min-height: 0; overflow: auto; padding: 16px; cursor: grab; }
+.gv-canvas.panning { cursor: grabbing; user-select: none; }
+.gv-svg { display: block; }
+.gv-empty { color: var(--faint); font-size: 13px; padding: 40px; text-align: center; }
+
+.gv-edge { stroke: var(--edge, rgba(127, 127, 127, 0.45)); stroke-width: 1.3; fill: none; }
+.gv-edge.member { stroke-dasharray: 4 4; opacity: 0.35; }
+/* labels get a halo of the canvas colour so they stay readable over the lines */
+.gv-elabel {
+  fill: var(--ink);
+  font-size: 10px;
+  paint-order: stroke;
+  stroke: var(--canvas);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+}
+.gv-memtoggle { border-style: dashed; }
+.gv-node { cursor: pointer; }
+.gv-nodecircle { stroke: var(--canvas); stroke-width: 2; }
+.gv-node:hover .gv-nodecircle { stroke: var(--accent); }
+.gv-node.center .gv-nodecircle { stroke: var(--accent); stroke-width: 3; }
+.gv-avtext { fill: #fff; font-size: 12px; font-weight: 700; }
+.gv-nodename { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+
+.gv-hint {
+  flex: none;
+  padding: 6px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--dim);
+  background: var(--chrome);
+}

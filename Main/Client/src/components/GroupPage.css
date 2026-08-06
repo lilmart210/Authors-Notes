@@ -1,0 +1,367 @@
+.gp {
+  height: 100%;
+  overflow-y: auto;
+  background: var(--canvas);
+}
+.gp-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 24px 26px 40vh;
+}
+
+.gp-head {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+}
+.gp-crest {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 19px;
+}
+.gp-headmain {
+  min-width: 0;
+  flex: 1;
+}
+.gp-name {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 650;
+  padding: 2px 0;
+  outline: none;
+}
+.gp-name:focus {
+  border-bottom-color: var(--accent);
+}
+.gp-sub {
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.gp-sec {
+  margin-top: 20px;
+}
+.gp-lab {
+  display: flex;
+  align-items: center;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--dim);
+  margin-bottom: 7px;
+}
+.gp-add,
+.gp-reladd {
+  margin-left: auto;
+  font: inherit;
+  font-size: 11px;
+  color: var(--link);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.gp-note {
+  font-size: 11.5px;
+  color: var(--faint);
+  margin-bottom: 8px;
+}
+.gp-empty {
+  font-size: 12px;
+  color: var(--faint);
+  padding: 4px 2px;
+}
+
+.gp-in,
+.gp-sel {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+}
+.gp-in:focus,
+.gp-sel:focus {
+  border-color: var(--accent);
+}
+
+.gp-attr {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.gp-attr .gp-in {
+  flex: 1;
+  min-width: 0;
+}
+.gp-inheritsel {
+  width: 100%;
+  margin-bottom: 8px;
+}
+.gp-colsel {
+  margin-left: auto;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 7px;
+  outline: none;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.gp-colrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  margin-bottom: 5px;
+}
+.gp-avsm {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  font-size: 10px;
+}
+.gp-colname {
+  font-size: 12.5px;
+  color: var(--ink);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gp-colval {
+  margin-left: auto;
+  flex: none;
+  font-size: 11.5px;
+  color: var(--ink);
+}
+.gp-colval.unset {
+  color: var(--faint);
+  font-style: italic;
+}
+.gp-memberadd {
+  display: flex;
+  gap: 7px;
+  margin-top: 6px;
+}
+.gp-memberadd .gp-addmember {
+  flex: 1;
+  min-width: 0;
+}
+.gp-gen {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.gp-gen:hover {
+  border-color: var(--accent);
+}
+.gp-inherited {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 5px 9px;
+}
+.gp-inherited .gp-an {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.gp-inherited .gp-tag {
+  font-size: 10.5px;
+  color: var(--faint);
+}
+.gp-inherited .gp-from {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--link);
+  border: 1px solid color-mix(in srgb, var(--link) 40%, transparent);
+  border-radius: 5px;
+  padding: 0 5px;
+}
+.gp-x {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--faint);
+  font-size: 15px;
+  cursor: pointer;
+}
+.gp-x:hover {
+  background: rgba(127, 127, 127, 0.15);
+  color: var(--ink);
+}
+
+.gp-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border2);
+}
+.gp-av,
+.gp-nodeav {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+}
+.gp-mwho {
+  min-width: 0;
+  flex: 1;
+}
+.gp-mname {
+  font-size: 13px;
+  font-weight: 600;
+}
+.gp-mattrs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 3px;
+}
+.gp-chip {
+  font-size: 11px;
+  color: var(--dim);
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+.gp-chip b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.gp-addmember {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.gp-relform {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.gp-relform .gp-sel {
+  flex: 1;
+  min-width: 0;
+}
+.gp-rellabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.gp-canvas {
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.gp-edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.gp-elabel {
+  fill: var(--dim);
+  font-size: 10px;
+  font-family: system-ui, sans-serif;
+}
+.gp-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 104px;
+  text-align: center;
+  pointer-events: none;
+}
+.gp-nodeav {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  margin: 0 auto 4px;
+  font-size: 17px;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--border);
+}
+.gp-nodename {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.gp-rellist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.gp-relpill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--dim);
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 2px 4px 2px 9px;
+}
+.gp-relpill b {
+  color: var(--accent);
+}
+.gp-relx {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: var(--faint);
+  cursor: pointer;
+}
+.gp-relx:hover {
+  color: var(--ink);
+}

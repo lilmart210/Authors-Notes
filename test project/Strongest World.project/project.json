@@ -1,0 +1,191 @@
+{
+  "formatVersion": 1,
+  "id": "66b525e325787",
+  "name": "Strongest World",
+  "author": "lilmart210",
+  "created": "2026-07-28T17:03:05.475Z",
+  "modified": "2026-07-28T23:20:24.678Z",
+  "tree": [
+    {
+      "id": "68fe7a180a110",
+      "kind": "group",
+      "name": "Manuscript",
+      "children": [
+        {
+          "id": "cd6ddec6ceea5",
+          "kind": "chapter",
+          "file": "thoughts__cd6dde.md",
+          "title": "Thoughts"
+        },
+        {
+          "id": "1c92acd24f329",
+          "kind": "chapter",
+          "file": "forced__1c92ac.md",
+          "title": "Forced"
+        },
+        {
+          "id": "69b57321b0ed5",
+          "kind": "chapter",
+          "file": "demise__69b573.md",
+          "title": "Demise"
+        },
+        {
+          "id": "27fdf0d85608e",
+          "kind": "chapter",
+          "file": "awareness__27fdf0.md",
+          "title": "Awareness"
+        },
+        {
+          "id": "2efe4cbe84567",
+          "kind": "chapter",
+          "file": "people__2efe4c.md",
+          "title": "People"
+        },
+        {
+          "id": "01ebf61562078",
+          "kind": "chapter",
+          "file": "voices-of-others__01ebf6.md",
+          "title": "Voices of Others"
+        },
+        {
+          "id": "e2a8142e82297",
+          "kind": "chapter",
+          "file": "blue-mountain__e2a814.md",
+          "title": "Blue Mountain"
+        },
+        {
+          "id": "5e2b19e608ec1",
+          "kind": "chapter",
+          "file": "desertification__5e2b19.md",
+          "title": "Desertification"
+        },
+        {
+          "id": "0c7eef5a347b1",
+          "kind": "chapter",
+          "file": "red-demon__0c7eef.md",
+          "title": "Red Demon"
+        },
+        {
+          "id": "d98118ee28c20",
+          "kind": "chapter",
+          "file": "waiting__d98118.md",
+          "title": "waiting"
+        },
+        {
+          "id": "1041eb363626a",
+          "kind": "chapter",
+          "file": "jin-family-city__1041eb.md",
+          "title": "Jin Family City"
+        },
+        {
+          "id": "717daa11532ac",
+          "kind": "chapter",
+          "file": "return__717daa.md",
+          "title": "Return"
+        },
+        {
+          "id": "a8494c0a18987",
+          "kind": "chapter",
+          "file": "test__a8494c.md",
+          "title": "Test"
+        },
+        {
+          "id": "2a7d69cfcbe84",
+          "kind": "chapter",
+          "file": "worries__2a7d69.md",
+          "title": "Worries"
+        },
+        {
+          "id": "a46e805d92946",
+          "kind": "chapter",
+          "file": "signs__a46e80.md",
+          "title": "Signs"
+        },
+        {
+          "id": "d917855d777ce",
+          "kind": "chapter",
+          "file": "formation__d91785.md",
+          "title": "Formation"
+        },
+        {
+          "id": "2d17e6caeb9c8",
+          "kind": "chapter",
+          "file": "formation__2d17e6.md",
+          "title": "Formation"
+        },
+        {
+          "id": "d8dc55135e135",
+          "kind": "chapter",
+          "file": "celebration__d8dc55.md",
+          "title": "Celebration"
+        },
+        {
+          "id": "550569e690255",
+          "kind": "chapter",
+          "file": "troublesome-matters__550569.md",
+          "title": "Troublesome Matters"
+        },
+        {
+          "id": "fa98c87f84906",
+          "kind": "chapter",
+          "file": "clarity__fa98c8.md",
+          "title": "clarity"
+        },
+        {
+          "id": "7c68985da12bf",
+          "kind": "chapter",
+          "file": "senses__7c6898.md",
+          "title": "Senses"
+        },
+        {
+          "id": "4b5f462a3a7a5",
+          "kind": "chapter",
+          "file": "light__4b5f46.md",
+          "title": "Light"
+        },
+        {
+          "id": "9dd9bfec7b36b",
+          "kind": "chapter",
+          "file": "hole__9dd9bf.md",
+          "title": "Hole"
+        },
+        {
+          "id": "9bc63d8e8ae79",
+          "kind": "chapter",
+          "file": "freedom__9bc63d.md",
+          "title": "Freedom"
+        },
+        {
+          "id": "99b7b57198d4c",
+          "kind": "chapter",
+          "file": "human__99b7b5.md",
+          "title": "Human"
+        },
+        {
+          "id": "922fbf096da74",
+          "kind": "chapter",
+          "file": "outer-cloud-sect-a-dead-scholar__922fbf.md",
+          "title": "Outer Cloud Sect, A dead Scholar"
+        },
+        {
+          "id": "5a5daef6cf3dc",
+          "kind": "chapter",
+          "file": "beginning__5a5dae.md",
+          "title": "Beginning"
+        },
+        {
+          "id": "26f0091647192",
+          "kind": "chapter",
+          "file": "unknown__26f009.md",
+          "title": "unknown"
+        },
+        {
+          "id": "50afe92aabbdb",
+          "kind": "chapter",
+          "file": "chapter__50afe9.md",
+          "title": ""
+        }
+      ]
+    }
+  ]
+}

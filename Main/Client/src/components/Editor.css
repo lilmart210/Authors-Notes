@@ -1,0 +1,292 @@
+.an-editor-host {
+  height: 100%;
+  min-height: 0;
+  background: var(--canvas);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* The sheet scroller owns scrolling (CM runs at height:auto inside it). */
+.editor-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.an-editor-host .cm-editor {
+  height: auto;
+}
+.an-editor-host .cm-host {
+  width: 100%;
+}
+
+/* Force the translucent selection tint over CM's built-in light default so the
+   selected prose never washes out (the toolbar taking focus can't change it). */
+.an-editor-host .cm-selectionBackground,
+.an-editor-host .cm-selectionLayer .cm-selectionBackground {
+  background: var(--sel) !important;
+}
+
+/* Chapter header, sitting on the sheet. */
+.sheet-head {
+  margin-bottom: 20px;
+}
+.sheet-head .chapline {
+  color: var(--faint);
+  font-size: 12px;
+}
+.sheet-head .chaptitle {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 5px 0 0;
+}
+
+/* ---- Page view — the prose sits on a page sheet with margins. ---- */
+.an-editor-host.page .editor-scroll {
+  padding: 28px 0 40vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.an-editor-host.page .sheet {
+  width: min(var(--sheet-width, 620px), calc(100% - 48px));
+  background: var(--page);
+  color: var(--ink);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  box-shadow: var(--shadow);
+  padding: 66px 74px;
+}
+
+/* ---- Scroll view — a comfortable centered measure, no sheet. ---- */
+.an-editor-host.scroll .editor-scroll {
+  padding: 30px 0 40vh;
+}
+.an-editor-host.scroll .sheet {
+  width: min(44rem, calc(100% - 40px));
+  margin: 0 auto;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0 24px;
+}
+
+/* ---- Remote presence (another view's caret + selection) ---- */
+.cm-remote-cursor {
+  position: relative;
+  display: inline-block;
+  width: 0;
+  border-left: 2px solid var(--rc, #888);
+  margin-left: -1px;
+  height: 1.2em;
+  vertical-align: text-bottom;
+}
+.cm-remote-cursor::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -1px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--rc, #888);
+}
+.cm-remote-selection {
+  background-color: color-mix(in srgb, var(--rc, #888) 26%, transparent);
+  border-radius: 2px;
+}
+
+/* ---- Marking pack — story-aware prose chrome ---- */
+.cm-ent {
+  border-bottom: 1px dotted var(--faint);
+  cursor: pointer;
+}
+.cm-ent:hover {
+  border-bottom-color: var(--accent);
+}
+/* Same-name clash: two cards claim this spelling here — click to resolve. */
+.cm-ent-ambiguous {
+  border-bottom: 1px dashed var(--warn);
+  background: color-mix(in srgb, var(--warn) 15%, transparent);
+  border-radius: 2px;
+}
+
+/* Hover preview — a peek at the linked card (box from themed .cm-tooltip). */
+.cm-entpreview {
+  width: 220px;
+  padding: 9px 11px;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+}
+.cm-entpreview-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.cm-entpreview-name {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+}
+.cm-entpreview-type {
+  font-size: 10.5px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.cm-entpreview-sub {
+  font-size: 11.5px;
+  color: var(--dim);
+  margin-top: 3px;
+}
+.cm-entpreview-open {
+  margin-top: 8px;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+.cm-entpreview-open:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.cm-seltb-primary b,
+.cm-seltb-primary {
+  color: var(--accent);
+  font-weight: 600;
+}
+.cm-comment-line {
+  color: var(--faint);
+  font-style: italic;
+}
+.cm-dinkus-line {
+  text-align: center;
+  color: var(--dim);
+  letter-spacing: 0.4em;
+}
+.cm-dinkus {
+  display: inline-block;
+  color: var(--dim);
+  letter-spacing: 0.6em;
+}
+
+/* Resolved generator token — a faint box, click to reroll. */
+.cm-resolved {
+  background: rgba(150, 150, 150, 0.14);
+  border-radius: 3px;
+  padding: 0 2px;
+  box-shadow: inset 0 -1px 0 var(--faint);
+  cursor: pointer;
+}
+.cm-resolved-raw {
+  color: var(--dim);
+}
+
+/* Resolve popover — layout only; the box comes from the themed .cm-tooltip */
+.cm-resolve {
+  width: 210px;
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 9px;
+  overflow: hidden;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+}
+.cm-resolve-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--border);
+}
+.cm-resolve-bank {
+  font-size: 11px;
+  color: var(--faint);
+  font-family: ui-monospace, Consolas, monospace;
+}
+.cm-resolve-shuffle {
+  margin-left: auto;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.cm-resolve-shuffle:hover {
+  border-color: var(--accent);
+}
+.cm-resolve-list {
+  overflow-y: auto;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.cm-resolve-item {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cm-resolve-item:hover {
+  background: var(--accent-soft);
+}
+.cm-resolve-item.on {
+  color: var(--accent);
+  font-weight: 600;
+}
+.cm-resolve-empty {
+  font-size: 11.5px;
+  color: var(--faint);
+  padding: 8px;
+  text-align: center;
+}
+
+/* Selection toolbar — layout only; the box comes from the themed .cm-tooltip */
+.cm-seltb {
+  display: flex;
+  gap: 1px;
+  padding: 3px;
+  white-space: nowrap;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+}
+.cm-seltb button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+.cm-seltb button:hover {
+  background: var(--accent-soft);
+}
+.cm-seltb b {
+  color: var(--accent);
+}
+.cm-seltb-div {
+  width: 1px;
+  background: var(--border);
+  margin: 3px 2px;
+}

@@ -1,0 +1,29 @@
+{
+  "formatVersion": 1,
+  "id": "3cdbb3172aff5",
+  "name": "test project",
+  "author": "",
+  "created": "2026-07-19T15:06:48.857Z",
+  "modified": "2026-07-19T15:20:15.985Z",
+  "tree": [
+    {
+      "id": "b84cef0f2e6ad",
+      "kind": "group",
+      "name": "Manuscript",
+      "children": [
+        {
+          "id": "a42445b71a2cf",
+          "kind": "chapter",
+          "file": "0001-chapter-1.md",
+          "title": "Chapter 1"
+        },
+        {
+          "id": "ed2fabc82708e",
+          "kind": "chapter",
+          "file": "0002-chapter-2.md",
+          "title": "Chapter 2"
+        }
+      ]
+    }
+  ]
+}

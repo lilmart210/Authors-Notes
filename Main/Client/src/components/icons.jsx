@@ -1,0 +1,156 @@
+// Lucide icons (MIT-licensed) inlined as small Solid components — the app's
+// single icon set. Ships with the app, works offline. Stroke inherits color.
+
+function base(props, children) {
+  return (
+    <svg
+      width={props.size ?? 20}
+      height={props.size ?? 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width={props.stroke ?? 1.7}
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class={props.class}
+    >
+      {children}
+    </svg>
+  )
+}
+
+export const FilesIcon = (props) =>
+  base(props, (
+    <>
+      <path d="M15.5 2H8.6C7.7 2 7 2.7 7 3.6v12.8c0 .9.7 1.6 1.6 1.6h9.8c.9 0 1.6-.7 1.6-1.6V6.5z" />
+      <path d="M15 2v4.5c0 .8.7 1.5 1.5 1.5H20" />
+      <path d="M17 18v2.4c0 .9-.7 1.6-1.6 1.6H5.6C4.7 22 4 21.3 4 20.4V8.6C4 7.7 4.7 7 5.6 7H7" />
+    </>
+  ))
+
+export const SearchIcon = (props) =>
+  base(props, (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4-4" />
+    </>
+  ))
+
+export const UsersIcon = (props) =>
+  base(props, (
+    <>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
+      <path d="M16 6.2a3 3 0 0 1 0 5.6M15.5 13.4a5.5 5.5 0 0 1 5 5.6" />
+    </>
+  ))
+
+export const TimelineIcon = (props) =>
+  base(props, (
+    <>
+      <path d="M5 4v16" />
+      <circle cx="5" cy="8" r="2" />
+      <circle cx="5" cy="16" r="2" />
+      <path d="M9 8h11M9 16h7" />
+    </>
+  ))
+
+export const DatabaseIcon = (props) =>
+  base(props, (
+    <>
+      <ellipse cx="12" cy="5.5" rx="7" ry="2.6" />
+      <path d="M5 5.5v13c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-13" />
+      <path d="M5 12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6" />
+    </>
+  ))
+
+export const SparkleIcon = (props) =>
+  base(props, (
+    <>
+      <rect x="5" y="7" width="14" height="12" rx="3" />
+      <path d="M12 7V3.5M9 12h.01M15 12h.01M9.5 16h5M2.5 12H5M19 12h2.5" />
+    </>
+  ))
+
+export const SettingsIcon = (props) =>
+  base(props, (
+    <>
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ))
+
+export const BookIcon = (props) =>
+  base(props, (
+    <>
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
+      <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20" />
+    </>
+  ))
+
+export const ChevronIcon = (props) =>
+  base(props, <path d="M9 6l6 6-6 6" />)
+
+export const ChevronDownIcon = (props) => base(props, <path d="M6 9l6 6 6-6" />)
+export const ChevronLeftIcon = (props) => base(props, <path d="M15 18l-6-6 6-6" />)
+export const ChevronRightIcon = (props) => base(props, <path d="M9 18l6-6-6-6" />)
+export const CircleIcon = (props) => base(props, <circle cx="12" cy="12" r="8" />)
+export const CheckCircleIcon = (props) =>
+  base(props, (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8.5 12.5l2.5 2.5 4.5-5" />
+    </>
+  ))
+
+export const PlusIcon = (props) => base(props, <path d="M12 5v14M5 12h14" />)
+export const MinusIcon = (props) => base(props, <path d="M5 12h14" />)
+export const PanelRightIcon = (props) =>
+  base(props, (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M15 4v16" />
+    </>
+  ))
+
+export const PageIcon = (props) =>
+  base(props, <rect x="5" y="3" width="14" height="18" rx="2" />)
+
+export const ScrollIcon = (props) =>
+  base(props, <path d="M4 6h16M4 12h16M4 18h16" />)
+
+export const LockIcon = (props) =>
+  base(props, (
+    <>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+      <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+    </>
+  ))
+
+export const OpenIcon = (props) =>
+  base(props, (
+    <>
+      <path d="M14 4h6v6" />
+      <path d="M20 4l-9 9" />
+      <path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5" />
+    </>
+  ))
+
+export const GraphIcon = (props) =>
+  base(props, (
+    <>
+      <circle cx="6" cy="6" r="2.4" />
+      <circle cx="18" cy="7" r="2.4" />
+      <circle cx="9" cy="18" r="2.4" />
+      <path d="M8.2 7.1l7.4.6M16 9l-6.2 7M7.7 15.7l.9-7.2" />
+    </>
+  ))
+
+export const TrashIcon = (props) =>
+  base(props, (
+    <>
+      <path d="M4 7h16" />
+      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+    </>
+  ))

@@ -1,0 +1,29 @@
+
+
+About this project. This project is Called Authors notes and this is the layout of the project
+
+root
+-> Architecture Maps
+--> Where any devised mechanism is mapped out first and documented. this includes things like the design of the site and general app layout
+
+-> Main
+--> Client 
+---> This is where we have our client. it will be made in vite + solidjs.
+--> Server 
+---> this is the file where the node js server will be. Its main responsisbilities is hosting updates.
+
+
+The goal : 
+-> the goal of this project is to make a app to write and edit a novel in. We will need to investigate the standards that exist, what format text and stuff should be in and create a rich environment around this.
+
+
+Tech stack and technologies.
+-> i have already decided what this project will look like. we will be using codemirror and my custom verdacio package https://packages.curruptnation.com/-/web/detail/@curruptnation/split-container
+-> the server will just be express js. simple webpage, just a home page with a download button. nothing too fancy
+-> we will develop in vite and tauri will bundle our app as a desktop app(windows for now, this app is primarily for myself)
+-> this will be deployed via a reverse proxy/nginx. everything compiles into 'builds' which will basically be what we use
+
+
+a problem i've realized. lets say a book has 1k chapters, opening up the project would cause problem for the character linkers. So we would either need to 
+-> keep a log of chapters we visited,update when they get edited.
+-> same idea as the first point but create 'summaries' of every-10 or so N packets of chapters.

@@ -1,0 +1,66 @@
+.es { position: relative; display: inline-flex; min-width: 0; }
+
+.es-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.es-btn:hover, .es-btn.open { border-color: var(--accent); }
+.es-ph { color: var(--faint); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.es-btnname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.es-caret { color: var(--faint); flex: none; margin-left: auto; }
+
+.es-av {
+  width: 20px; height: 20px; border-radius: 6px; flex: none;
+  display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 9.5px;
+}
+.es-av.sm { width: 18px; height: 18px; font-size: 9px; }
+
+.es-backdrop { position: fixed; inset: 0; z-index: 130; }
+.es-pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 240px;
+  max-width: 340px;
+  z-index: 131;
+  background: var(--chrome);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.es-search {
+  font: inherit; font-size: 12.5px; color: var(--ink);
+  background: var(--bg); border: 0; border-bottom: 1px solid var(--border);
+  padding: 8px 10px; outline: none;
+}
+.es-list { max-height: 320px; overflow-y: auto; padding: 4px; }
+.es-row { display: flex; align-items: center; }
+.es-tw { width: 18px; flex: none; display: inline-flex; align-items: center; justify-content: center; color: var(--faint); cursor: pointer; }
+.es-pick {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+  font: inherit; font-size: 12.5px; color: var(--ink);
+  background: transparent; border: 0; border-radius: 6px; padding: 5px 7px; cursor: pointer; text-align: left;
+}
+.es-pick:hover { background: var(--accent-soft); }
+.es-pick.sel { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.es-pick.dim { color: var(--faint); cursor: default; }
+.es-pick.dim:hover { background: transparent; }
+.es-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.es-type { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.04em; flex: none; }
+.es-clear { color: var(--dim); padding-left: 12px; }
+.es-empty { font-size: 12px; color: var(--faint); padding: 10px; text-align: center; }
