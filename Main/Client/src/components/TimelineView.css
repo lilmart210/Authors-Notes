@@ -167,12 +167,11 @@
   background: var(--an-canvas);
   border: 2px solid var(--an-accent);
 }
-.tl-dot.done {
-  background: var(--an-accent);
-}
-.tl-dot.planned {
-  border-style: dashed;
-}
+/* the draft state, as the Manuscript dots: never published · published · changed · nothing written */
+.tl-dot.new { border-color: var(--faint); background: var(--faint); }
+.tl-dot.pub { background: var(--an-accent); }
+.tl-dot.changed { border-color: var(--warn); background: var(--warn); }
+.tl-dot.empty { border-color: var(--faint); border-style: dashed; }
 .tl-node.planned .tl-card {
   border-style: dashed;
   opacity: 0.86;
@@ -461,7 +460,6 @@
 
 /* ---- card read/edit + open button + status + editable topics ---- */
 .tl-chead { align-items: center; }
-.tl-exists { color: var(--good); display: inline-flex; align-items: center; }
 .tl-openbtn {
   margin-left: auto; flex: none;
   width: 24px; height: 24px; display: grid; place-items: center;
@@ -473,11 +471,12 @@
 .tl-readfield { font-size: 12.5px; color: var(--ink); line-height: 1.5; }
 .tl-readlab { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); margin-right: 5px; }
 
-.tl-planfield.tl-statusf { width: 110px; flex: none; }
-.tl-planfield.tl-statusf select {
-  font: inherit; font-size: 12.5px; color: var(--ink);
-  background: var(--bg); border: 1px solid var(--border2); border-radius: 8px; padding: 6px 8px; outline: none; cursor: pointer;
-}
+.tl-grow { flex: 1; }
+.tl-draft { display: inline-flex; align-items: center; flex: none; }
+.tl-band-ic { color: var(--accent); flex: none; }
+a.tl-band-nm { cursor: pointer; color: inherit; text-decoration: none; }
+a.tl-band-nm:hover { color: var(--link); text-decoration: underline; }
+.tl-addinarc { margin: 0 0 6px; }
 
 .tl-toplabel { display: flex; align-items: center; margin-top: 4px; }
 .tl-toplabel label { flex: 1; }

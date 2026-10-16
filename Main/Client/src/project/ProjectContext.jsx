@@ -325,12 +325,12 @@ export function ProjectProvider(props) {
   const chapterNumberExists = (n) => n != null && ChapterBodies().some((c) => c.number === Number(n))
 
   // `arc` places the chapter in that arc; when omitted it inherits the last chapter's arc.
-  async function AddChapter({ number, title = '', status = 'draft', open = true, arc: arcName } = {}) {
+  async function AddChapter({ number, title = '', open = true, arc: arcName } = {}) {
     if (!Project.dir) return
     const num = number != null && number !== '' ? Number(number) : nextChapterNumber()
     const id = format.generateId()
     const file = format.chapterFileName(title, id)
-    const meta = { id, title, type: 'chapter', number: num, status }
+    const meta = { id, title, type: 'chapter', number: num }
     const arc = arcName !== undefined ? arcName : lastChapterArc()
     if (arc) meta.arc = arc
     await service.saveDocument(Project.dir, file, meta, '')
@@ -836,7 +836,6 @@ export function ProjectProvider(props) {
         id: chapter.id,
         number: chapter.number,
         title: chapter.title,
-        status: chapter.meta?.status || 'draft',
         summary: chapter.meta?.summary || '',
         objective: chapter.meta?.objective || '',
         topics: chapter.meta?.topics || [],
