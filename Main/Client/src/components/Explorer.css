@@ -1,0 +1,46 @@
+/* The binder sidebar — ported from UI Artifacts/05 - Binder (proposal).html */
+.binder{ padding-bottom:40px; }
+.sec{ position:relative; }
+.sechead{ position:sticky; top:0; z-index:3; background:var(--panel); display:flex; align-items:center; gap:2px; padding:9px 8px 4px 7px; cursor:pointer; user-select:none;
+          font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--dim); font-weight:600; }
+.sechead:hover{ color:var(--ink); }
+.sechead:hover .node-actions{ opacity:1; }
+.sechead .tw{ width:17px; display:inline-flex; justify-content:center; color:var(--faint); }
+.sechead .ss{ margin-left:auto; text-transform:none; letter-spacing:0; font-weight:400; color:var(--faint); font-size:10.5px; padding-right:4px; }
+.sechead.drop-in{ box-shadow:inset 0 -2px 0 var(--accent); }
+.secbody{ padding-bottom:6px; }
+
+.binder .node{ min-height:24px; padding-right:8px; outline:none; }
+.binder .node:focus-visible{ box-shadow:inset 0 0 0 1px var(--accent); }
+.binder .node .tw{ align-self:stretch; }
+.binder .node .ic{ color:var(--dim); }
+.binder .node.arc .lbl{ font-weight:600; }
+.binder .node .arcic{ color:var(--accent); }
+.binder .node .lbl.planned{ color:var(--faint); font-style:italic; }
+.binder .node .tag{ font-variant-numeric:tabular-nums; flex:none; }
+.binder .node.drop-in{ box-shadow:inset 0 0 0 1px var(--accent); background:var(--accent-soft); }
+.binder .node.drop-before{ box-shadow:inset 0 2px 0 var(--accent); }
+.binder .node.drop-after{ box-shadow:inset 0 -2px 0 var(--accent); }
+.binder .node.dragging{ opacity:.45; }
+.binder .node:focus-within .node-actions{ opacity:1; }
+
+/* chapter draft state: nothing yet · never published · published · changed since */
+.sd{ width:8px; height:8px; border-radius:50%; flex:none; margin:0 3px; background:var(--faint); }
+.sd.empty{ background:transparent; border:1.5px dashed var(--faint); }
+.sd.new{ background:var(--faint); }
+.sd.pub{ background:var(--accent); }
+.sd.changed{ background:var(--warn); }
+
+.inl{ flex:1; min-width:0; background:var(--bg); border:1px solid var(--accent); border-radius:5px; padding:1px 6px; outline:0; font:inherit; font-size:13px; color:var(--ink); }
+
+.bookrow{ display:flex; gap:10px; align-items:center; padding:6px 10px 8px 27px; cursor:pointer; outline:none; }
+.bookrow:hover{ background:var(--accent-soft); }
+.bookrow.sel{ background:var(--sel); }
+.bookrow:focus-visible{ box-shadow:inset 0 0 0 1px var(--accent); }
+.bookthumb{ width:34px; height:50px; border-radius:3px; flex:none; overflow:hidden; border:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,.18); }
+.bookinfo{ min-width:0; flex:1; }
+.booktitle{ font-weight:650; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bookmeta{ font-size:11px; color:var(--dim); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+
+.binder-menu svg{ color:var(--dim); flex:none; }
+.binder-menu button{ display:flex; align-items:center; gap:8px; }

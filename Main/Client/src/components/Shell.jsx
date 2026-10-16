@@ -11,28 +11,34 @@ import BanksBrowser from './BanksBrowser.jsx'
 import BankPage from './BankPage.jsx'
 import TimelineView from './TimelineView.jsx'
 import RelationshipGraph from './RelationshipGraph.jsx'
-import BibleTree from './BibleTree.jsx'
 import ImportWizard from './ImportWizard.jsx'
+import Explorer from './Explorer.jsx'
+import DraftsPane from './DraftsPane.jsx'
+import DiffView from './DiffView.jsx'
+import ToastHost from './Toast.jsx'
+import { OverviewPage, BookTextPage, PublishingPage, ArcPageView, BookGlance } from './BookPages.jsx'
 import { avatarColor, avatarInitial } from './avatar.js'
-import { stripGeneratorMarkers, chapterLabel } from '../project/format.js'
+import { stripGeneratorMarkers, chapterLabel, SECTION_ROOT } from '../project/format.js'
 import { EXPORT_PROFILES } from '../project/bookExport.js'
 import {
-  FilesIcon, SearchIcon, UsersIcon, TimelineIcon, DatabaseIcon,
-  SparkleIcon, SettingsIcon, BookIcon, PageIcon, ScrollIcon,
+  FilesIcon, SearchIcon, UsersIcon, DatabaseIcon, SparkleIcon, SettingsIcon, PageIcon, ScrollIcon,
   ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, CheckCircleIcon,
-  PlusIcon, MinusIcon, PanelRightIcon, LockIcon, OpenIcon, GraphIcon,
+  PlusIcon, MinusIcon, PanelRightIcon, LockIcon, OpenIcon,
 } from './icons.jsx'
 
 const appWindow = getCurrentWindow()
 const APP_VERSION = 'v0.1.0'
+const BOOK_PAGE_NAMES = { overview: 'Overview', blurb: 'Blurb', synopsis: 'Synopsis', publishing: 'Publishing' }
+const SECTION_OF_ROOT = Object.fromEntries(Object.entries(SECTION_ROOT).map(([section, root]) => [root, section]))
+const SECTION_NAMES = { world: 'World', plot: 'Plot', notes: 'Notes', front: 'Manuscript', back: 'Manuscript' }
 
 export default function Shell() {
   const {
-    Project, CurrentDoc, Status, Notice, RetrySaves, FlushEverything, Busy, HasProject, Chapters, Entities, Banks,
+    Project, CurrentDoc, Status, Notice, RetrySaves, FlushEverything, Busy, HasProject, Entities, Banks,
     LeftView, SetLeftView, NewProject, OpenProject, OpenProjectPath, RecentProjects, BeginImport, Importing,
-    AddChapter, nextChapterNumber, chapterNumberExists, OpenDocument, OpenChapterById, OpenEntity, OpenEntityById, EntityById, Groups, MembersOf, MentionsFor, OpenTimeline, OpenGraph,
-    CastInChapter, CastForChapter, ChapterById, UpdateChapterMeta, SetArcForChapters, DeleteChapters, ArcBands, SearchProject, UpdateBody, UpdateMeta, TimelineChapters, CreateEntity, CreateEntityInCollection,
-    AddAliasToEntity, ResolveMention, PreviewFor,
+    OpenChapterById, OpenEntityById, EntityById, MentionsFor,
+    CastForChapter, ChapterById, UpdateChapterMeta, SearchProject, TimelineChapters, CreateEntity,
+    AddAliasToEntity, ResolveMention, PreviewFor, Book, ArcNames,
     acquireChapterDoc, releaseChapterDoc, PromoteDocTab,
     ExportBook, RenderPreview, SetContainerApi, HandleContainerChange,
   } = useProject()
@@ -93,6 +99,11 @@ export default function Shell() {
                 <Match when={CurrentDoc.kind === 'bank'}><BankPage /></Match>
                 <Match when={CurrentDoc.kind === 'timeline'}><TimelineView /></Match>
                 <Match when={CurrentDoc.kind === 'graph'}><RelationshipGraph /></Match>
+                <Match when={CurrentDoc.kind === 'book' && CurrentDoc.id === 'overview'}><OverviewPage /></Match>
+                <Match when={CurrentDoc.kind === 'book' && (CurrentDoc.id === 'blurb' || CurrentDoc.id === 'synopsis')}><BookTextPage page={CurrentDoc.id} /></Match>
+                <Match when={CurrentDoc.kind === 'book' && CurrentDoc.id === 'publishing'}><PublishingPage onExport={openExport} /></Match>
+                <Match when={CurrentDoc.kind === 'arc'}><ArcPageView /></Match>
+                <Match when={CurrentDoc.kind === 'diff'}><DiffView /></Match>
               </Switch>
             )}
           </Show>
@@ -117,16 +128,9 @@ export default function Shell() {
   const [PreviewOpen, SetPreviewOpen] = createSignal(false)
   const [PreviewHtml, SetPreviewHtml] = createSignal('')
   const [PreviewError, SetPreviewError] = createSignal(null)
-  const [NewChapterOpen, SetNewChapterOpen] = createSignal(false)
-  const [NewChapterNumber, SetNewChapterNumber] = createSignal('')
-  const [NewChapterTitle, SetNewChapterTitle] = createSignal('')
   const [AssignOpen, SetAssignOpen] = createSignal(false)
   const [AssignText, SetAssignText] = createSignal('')
   const [AssignQuery, SetAssignQuery] = createSignal('')
-  const [NewEntityOpen, SetNewEntityOpen] = createSignal(false)
-  const [NewEntityName, SetNewEntityName] = createSignal('')
-  const [NewEntityType, SetNewEntityType] = createSignal('Character')
-  const [NewEntityColl, SetNewEntityColl] = createSignal(null)
   const [TopicsOpen, SetTopicsOpen] = createSignal(true)
   const [ThemeName, SetThemeName] = createSignal('gray-dark')
   const [PageView, SetPageView] = createSignal(true)
@@ -137,16 +141,6 @@ export default function Shell() {
   const [DockOpen, SetDockOpen] = createSignal(true)
   const [InspectedId, SetInspectedId] = createSignal(null)
   const [DockPinnedId, SetDockPinnedId] = createSignal(null)
-  const [SelectedIds, SetSelectedIds] = createSignal([])
-  const [BulkArc, SetBulkArc] = createSignal('')
-  const [ConfirmDeleteOpen, SetConfirmDeleteOpen] = createSignal(false)
-  const [ArcModalOpen, SetArcModalOpen] = createSignal(false)
-  const [CtxMenu, SetCtxMenu] = createSignal(null) // { x, y } for the chapter right-click menu
-  let SelectAnchor = null // anchor for shift-range selection
-  const [ArcOpenMap, SetArcOpenMap] = createSignal({})
-  const [ManuscriptOpen, SetManuscriptOpen] = createSignal(true)
-  const [BibleOpen, SetBibleOpen] = createSignal(true)
-  const [CollOpen, SetCollOpen] = createSignal({})
   const [CastOpen, SetCastOpen] = createSignal(true)
   const [PlanOpen, SetPlanOpen] = createSignal(true)
 
@@ -155,7 +149,7 @@ export default function Shell() {
 
   // 3. onMount
   // Closing the window writes every pending edit first (chapter text otherwise waits
-  // a few seconds after the last keystroke). If a write fails the window stays open
+  // a moment after the last keystroke). If a write fails the window stays open
   // with the error in the status bar; closing a second time quits anyway.
   let CloseBlocked = false
   onMount(() => {
@@ -190,11 +184,6 @@ export default function Shell() {
   }
   const toggleMenu = (name) => SetMenu((current) => (current === name ? null : name))
   const runMenu = (action) => { SetMenu(null); action() }
-  const openNewChapter = () => { SetNewChapterNumber(String(nextChapterNumber())); SetNewChapterTitle(''); SetNewChapterOpen(true) }
-  async function runNewChapter() {
-    await AddChapter({ number: NewChapterNumber(), title: NewChapterTitle().trim() })
-    SetNewChapterOpen(false)
-  }
   const aliasForms = (entity) => (entity.meta.aliases || []).map((a) => (typeof a === 'object' ? a.form : a))
   const openAssign = (text) => { SetAssignText(text); SetAssignQuery(''); SetAssignOpen(true) }
   const assignMatches = () => {
@@ -205,13 +194,10 @@ export default function Shell() {
   }
   const assignToCard = (id) => { AddAliasToEntity(id, AssignText()); SetAssignOpen(false) }
   const createFromAssign = (type) => { CreateEntity(AssignText(), type); SetAssignOpen(false) }
-  const entityTypes = () => Array.from(new Set(Entities().map((e) => e.meta.type).filter((t) => t && t !== 'group')))
-  const openNewEntity = (collId = null) => { SetNewEntityColl(collId); SetNewEntityName(''); SetNewEntityType('Character'); SetNewEntityOpen(true) }
-  async function runNewEntity() {
-    await CreateEntityInCollection(NewEntityName().trim() || 'New entity', NewEntityType().trim() || 'Character', NewEntityColl())
-    SetNewEntityOpen(false)
+  function openExport() {
+    SetExportResult(null)
+    SetExportOpen(true)
   }
-  const openExport = () => { SetExportResult(null); SetExportOpen(true) }
   async function openPreview() {
     SetPreviewError(null)
     SetPreviewHtml('')
@@ -249,7 +235,7 @@ export default function Shell() {
     }
   }
   const bodyCols = () => {
-    const side = SidebarOpen() ? '340px' : '0px'
+    const side = SidebarOpen() ? '300px' : '0px'
     const dock = HasProject() ? (DockOpen() ? ' 300px' : ' 0px') : ''
     return `52px ${side} minmax(300px,1fr)${dock}`
   }
@@ -278,106 +264,9 @@ export default function Shell() {
   const openDisplayedChapter = () => { const id = displayedChapterId(); if (id) { OpenChapterById(id); SetDockPinnedId(null) } }
 
   const topics = () => displayedChapter()?.meta?.topics || []
-  const addTopic = () => updatePlanMeta('topics', [...topics(), { title: 'New topic', note: '', done: false }])
+  const addTopic = () => updatePlanMeta('topics', [...topics(), { title: '', note: '', done: false }])
   const updateTopic = (i, patch) => updatePlanMeta('topics', topics().map((t, idx) => (idx === i ? { ...t, ...patch } : t)))
-
-  // Arcs start collapsed — open on demand.
-  const arcOpen = (name) => ArcOpenMap()[name] === true
-  const toggleArc = (name) => SetArcOpenMap((m) => ({ ...m, [name]: !m[name] }))
-  // Story-bible collection tree: collections (groups) hold members; a member can
-  // itself be a collection (a sect with sub-sects beneath it).
-  const collOpen = (id) => CollOpen()[id] === true
-  const toggleColl = (id) => SetCollOpen((m) => ({ ...m, [id]: !m[id] }))
-  const groupMemberIds = () => new Set(Groups().flatMap((g) => MembersOf(g.meta)))
-  const isMemberSomewhere = (id) => groupMemberIds().has(id)
-  // Deterministic order so clicking/saving never reshuffles the tree: authored
-  // `order` first (sub-pages), then name.
-  const byOrderName = (a, b) => (a.meta.order ?? 1e9) - (b.meta.order ?? 1e9) || String(a.meta.name || '').localeCompare(String(b.meta.name || ''))
-  const documentChildren = (entity) => (entity.childIds || []).map((id) => EntityById(id)).filter(Boolean).sort(byOrderName)
-  const memberCards = (entity) => (entity.meta.type === 'group' ? MembersOf(entity.meta).map((id) => EntityById(id)).filter(Boolean).sort(byOrderName) : [])
-  // A card's explorer children = its sub-pages (document children) plus, for a
-  // collection, its members (rule/explicit). Deduped. Indent is computed from
-  // depth (inline) so arbitrarily-deep nesting lines up.
-  const childCardsOf = (entity) => {
-    const seen = new Set()
-    const out = []
-    for (const card of [...documentChildren(entity), ...memberCards(entity)]) {
-      if (card && !seen.has(card.meta.id)) { seen.add(card.meta.id); out.push(card) }
-    }
-    return out
-  }
-  const topLevelCards = () => Entities().filter((e) => !e.parentId && !isMemberSomewhere(e.meta.id)).sort(byOrderName)
-  function BibleNode(props) {
-    const ent = () => props.entity
-    const isGroup = () => ent().meta.type === 'group'
-    const kids = () => childCardsOf(ent())
-    const hasKids = () => kids().length > 0
-    // One operation per gesture: the ROW toggles expand for a container (or opens
-    // a leaf, which has nothing to expand); an explicit Open button opens the card.
-    const handleRow = () => (hasKids() ? toggleColl(ent().meta.id) : OpenEntity(ent()))
-    return (
-      <>
-        <button class="node" classList={{ sel: CurrentDoc.id === ent().meta.id }} style={{ 'padding-left': `${10 + props.depth * 14}px` }}
-          onClick={handleRow} onDblClick={() => OpenEntity(ent(), { smart: true })}>
-          <span class="tw">
-            <Show when={hasKids()}>{collOpen(ent().meta.id) ? <ChevronDownIcon size={15} /> : <ChevronRightIcon size={15} />}</Show>
-          </span>
-          <span class="lbl">{ent().meta.name}</span>
-          <Show when={hasKids()}><span class="tag">{kids().length}</span></Show>
-          <span class="node-actions">
-            <Show when={hasKids()}>
-              <button class="nodebtn" title="Open" onClick={(e) => { e.stopPropagation(); OpenEntity(ent()) }}><OpenIcon size={13} /></button>
-            </Show>
-            <Show when={isGroup()}>
-              <button class="nodebtn" title="New member in this collection" onClick={(e) => { e.stopPropagation(); openNewEntity(ent().meta.id) }}><PlusIcon size={14} /></button>
-            </Show>
-          </span>
-        </button>
-        <Show when={hasKids() && collOpen(ent().meta.id) && props.depth < 8}>
-          <For each={kids()}>{(m) => <BibleNode entity={m} depth={props.depth + 1} />}</For>
-        </Show>
-      </>
-    )
-  }
-  // Multi-select: Ctrl/Cmd-click toggles, Shift-click selects a range, plain click opens.
-  const isSelected = (id) => SelectedIds().includes(id)
-  const toggleSelect = (id) => SetSelectedIds((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
-  const selectRange = (toId) => {
-    const order = TimelineChapters().map((c) => c.id)
-    const a = order.indexOf(SelectAnchor ?? toId)
-    const b = order.indexOf(toId)
-    if (a < 0 || b < 0) return
-    const [lo, hi] = a < b ? [a, b] : [b, a]
-    SetSelectedIds(order.slice(lo, hi + 1))
-  }
-  const handleChapterClick = (e, child) => {
-    if (e.metaKey || e.ctrlKey) { SelectAnchor = child.id; toggleSelect(child.id); return }
-    if (e.shiftKey && (SelectedIds().length || SelectAnchor)) { selectRange(child.id); return }
-    SelectAnchor = child.id
-    SetSelectedIds([])
-    OpenDocument(child)
-  }
-  const openChapterMenu = (e, child) => {
-    e.preventDefault()
-    if (!isSelected(child.id)) { SelectAnchor = child.id; SetSelectedIds([child.id]) }
-    SetCtxMenu({ x: e.clientX, y: e.clientY })
-  }
-  const applyArc = () => { SetArcForChapters(SelectedIds(), BulkArc().trim()); SetArcModalOpen(false) }
-  async function runBulkDelete() {
-    const ids = SelectedIds()
-    SetConfirmDeleteOpen(false)
-    SetSelectedIds([])
-    await DeleteChapters(ids)
-  }
-  const chapterNode = (child, depth) => (
-    <button class={`node depth${depth}`} classList={{ sel: isChapter() && CurrentDoc.id === child.id, selected: isSelected(child.id) }}
-      onClick={(e) => handleChapterClick(e, child)} onDblClick={() => OpenDocument(child, { smart: true })}
-      onContextMenu={(e) => openChapterMenu(e, child)}>
-      <span class="dot"></span>
-      <span class="lbl">{chapterLabel(child.number, child.title)}</span>
-    </button>
-  )
-  const arcRange = (band) => (band.from == null ? '' : band.to !== band.from ? `${band.from}–${band.to}` : String(band.from))
+  const removeTopic = (i) => updatePlanMeta('topics', topics().filter((_, idx) => idx !== i))
 
   // 6. JSX-helper builders
   // Only speaks up when something is happening: a write in flight, one that just
@@ -395,14 +284,21 @@ export default function Shell() {
     return matched ? matched.length : 0
   }
   const totalWords = () => TimelineChapters().reduce((sum, c) => sum + c.words, 0)
-  const docTitle = () =>
-    CurrentDoc.meta?.title || CurrentDoc.meta?.name || (CurrentDoc.kind === 'timeline' ? 'Series Timeline' : 'Untitled')
-  const sectionLabel = () => {
-    if (CurrentDoc.kind === 'chapter') return 'Manuscript'
-    if (CurrentDoc.kind === 'timeline') return 'Plot'
-    if (CurrentDoc.kind === 'bank') return 'Banks'
-    if (CurrentDoc.kind === 'group') return 'Groups'
-    return 'Cast'
+  function docTitle() {
+    if (CurrentDoc.kind === 'book') return CurrentDoc.id === 'overview' ? Book.overview.meta.title || 'Overview' : BOOK_PAGE_NAMES[CurrentDoc.id]
+    if (CurrentDoc.kind === 'arc') return CurrentDoc.id || 'Arc'
+    if (CurrentDoc.kind === 'diff') return 'Drafts'
+    if (CurrentDoc.kind === 'timeline') return 'Outline'
+    return CurrentDoc.meta?.title || CurrentDoc.meta?.name || 'Untitled'
+  }
+  function sectionLabel() {
+    const kind = CurrentDoc.kind
+    if (kind === 'chapter' || kind === 'arc') return 'Manuscript'
+    if (kind === 'book') return 'Book'
+    if (kind === 'diff') return CurrentDoc.id === 'blurb' || CurrentDoc.id === 'synopsis' ? 'Book' : 'Manuscript'
+    if (kind === 'timeline') return 'Plot'
+    if (kind === 'bank') return 'Banks'
+    return SECTION_NAMES[SECTION_OF_ROOT[CurrentDoc.root]] || 'World'
   }
   const docMentionTotal = () => MentionsFor(CurrentDoc.id).reduce((sum, hit) => sum + hit.count, 0)
   const castMeta = (m) => {
@@ -411,7 +307,10 @@ export default function Shell() {
     if (m.lastSeen != null) parts.push(`last seen Ch.${m.lastSeen}`)
     return parts
   }
+  const isBookText = () => CurrentDoc.kind === 'book' && (CurrentDoc.id === 'blurb' || CurrentDoc.id === 'synopsis')
+  const showsBookGlance = () => (CurrentDoc.kind === 'book' && !isBookText()) || CurrentDoc.kind === 'arc' || CurrentDoc.kind === 'timeline'
 
+  // 7. JSX
   return (
     <div class="app">
       <div class="topbar" data-tauri-drag-region>
@@ -466,7 +365,7 @@ export default function Shell() {
             <Show when={!SearchQuery()}>
               <div class="crumbs">
                 <Show when={HasProject()} fallback={<span class="crumb">No project</span>}>
-                  <span class="crumb">{Project.manifest?.name}</span>
+                  <span class="crumb">{Book.overview.meta.title || Project.manifest?.name}</span>
                   <Show when={CurrentDoc.id}>
                     <span class="csep">›</span>
                     <span class="crumb">{sectionLabel()}</span>
@@ -547,7 +446,6 @@ export default function Shell() {
         <nav class="rail">
           <button class="ri" classList={{ on: LeftView() === 'explorer' && SidebarOpen() }} title="Explorer" onClick={() => selectView('explorer')}><FilesIcon /></button>
           <button class="ri" classList={{ on: LeftView() === 'cast' && SidebarOpen() }} title="Cast — characters & entities" onClick={() => selectView('cast')}><UsersIcon /></button>
-          <button class="ri" classList={{ on: CurrentDoc.kind === 'timeline' }} title="Timeline & plot" onClick={OpenTimeline}><TimelineIcon /></button>
           <button class="ri" classList={{ on: LeftView() === 'banks' && SidebarOpen() }} title="Data banks" onClick={() => selectView('banks')}><DatabaseIcon /></button>
           <button class="ri" title="AI add-ons"><SparkleIcon /></button>
           <div class="spacer"></div>
@@ -558,56 +456,7 @@ export default function Shell() {
           <Show when={HasProject()}>
             <Switch fallback={<CastBrowser />}>
               <Match when={LeftView() === 'banks'}><BanksBrowser /></Match>
-              <Match when={LeftView() === 'explorer'}>
-              <div class="exhead"><span>{Project.manifest?.name}</span><span class="dots">⋯</span></div>
-              <div class="tree">
-                <button class="node grp depth1" classList={{ sel: CurrentDoc.kind === 'timeline' }}
-                  onClick={() => OpenTimeline()} onDblClick={() => OpenTimeline({ smart: true })}>
-                  <span class="tw"></span>
-                  <TimelineIcon size={15} class="ic" />
-                  <span class="lbl">Series Timeline</span>
-                </button>
-                <button class="node grp depth1" onClick={() => SetManuscriptOpen((v) => !v)}>
-                  <span class="tw">{ManuscriptOpen() ? <ChevronDownIcon size={15} /> : <ChevronRightIcon size={15} />}</span>
-                  <BookIcon size={15} class="ic" />
-                  <span class="lbl">Manuscript</span>
-                  <Show when={SelectedIds().length} fallback={<span class="tag">{Chapters().length}</span>}>
-                    <span class="selcount">{SelectedIds().length} selected</span>
-                  </Show>
-                  <span class="addbtn" title="New chapter" onClick={(e) => { e.stopPropagation(); openNewChapter() }}><PlusIcon size={14} /></span>
-                </button>
-                <Show when={ManuscriptOpen()}>
-                  <For each={ArcBands()}>
-                    {(band) => (
-                      <Show when={band.arc} fallback={<For each={band.chapters}>{(child) => chapterNode(child, 2)}</For>}>
-                        <button class="node arc depth2" onClick={() => toggleArc(band.arc)}>
-                          <span class="tw">{arcOpen(band.arc) ? <ChevronDownIcon size={15} /> : <ChevronRightIcon size={15} />}</span>
-                          <TimelineIcon size={14} class="ic" />
-                          <span class="lbl arclbl">{band.arc}</span>
-                          <Show when={arcRange(band)}><span class="tag">{arcRange(band)}</span></Show>
-                        </button>
-                        <Show when={arcOpen(band.arc)}>
-                          <For each={band.chapters}>{(child) => chapterNode(child, 3)}</For>
-                        </Show>
-                      </Show>
-                    )}
-                  </For>
-                </Show>
-
-                <button class="node grp depth1" onClick={() => SetBibleOpen((v) => !v)}>
-                  <span class="tw">{BibleOpen() ? <ChevronDownIcon size={15} /> : <ChevronRightIcon size={15} />}</span>
-                  <UsersIcon size={15} class="ic" />
-                  <span class="lbl">Story Bible</span>
-                  <span class="tag">{Entities().length}</span>
-                  <span class="addbtn" title="Connection graph" onClick={(e) => { e.stopPropagation(); OpenGraph() }}><GraphIcon size={14} /></span>
-                  <span class="addbtn" title="New collection (for loose / one-off entries)" onClick={(e) => { e.stopPropagation(); CreateEntity('New collection', 'group') }}><UsersIcon size={14} /></span>
-                  <span class="addbtn" title="New entry" onClick={(e) => { e.stopPropagation(); openNewEntity(null) }}><PlusIcon size={14} /></span>
-                </button>
-                <Show when={BibleOpen()}>
-                  <BibleTree onNewMember={openNewEntity} />
-                </Show>
-              </div>
-              </Match>
+              <Match when={LeftView() === 'explorer'}><Explorer /></Match>
             </Switch>
           </Show>
         </div>
@@ -638,7 +487,7 @@ export default function Shell() {
               fallback={
                 <Switch fallback={<div class="dock-hint">Open a chapter to see its cast and plan.</div>}>
                   <Match when={displayedChapter()}>
-                    {/* non-collapsible chapter header — controls both Cast and Plan below */}
+                    {/* non-collapsible chapter header — controls everything below */}
                     <div class="dock-chapterhead">
                       <div class="dock-nav">
                         <button class="nav" title="Previous chapter" onClick={() => stepDock(-1)}><ChevronLeftIcon size={15} /></button>
@@ -651,6 +500,7 @@ export default function Shell() {
                           <button class="dock-lock" title="Pinned — click to follow the open chapter" onClick={() => SetDockPinnedId(null)}><LockIcon size={13} /></button>
                         </Show>
                       </div>
+                      <DraftsPane owner={displayedChapterId()} />
                       <div class="dock-headfields">
                         <div class="field2">
                           <div class="field fnum"><label>Chapter #</label>
@@ -663,10 +513,10 @@ export default function Shell() {
                           </div>
                         </div>
                         <div class="field"><label>Arc</label>
-                          <input class="fbox" placeholder="Unsorted" list="arc-names"
+                          <input class="fbox" placeholder="No arc" list="arc-names"
                             value={displayedChapter()?.meta?.arc || ''} onInput={(e) => updatePlanMeta('arc', e.currentTarget.value)} />
                           <datalist id="arc-names">
-                            <For each={ArcBands().filter((b) => b.arc)}>{(b) => <option value={b.arc} />}</For>
+                            <For each={ArcNames()}>{(name) => <option value={name} />}</For>
                           </datalist>
                         </div>
                       </div>
@@ -731,16 +581,27 @@ export default function Shell() {
                             {(topic, i) => (
                               <div class="topic" classList={{ done: topic.done }}>
                                 <div class="tc">
-                                  <input class="topic-in tt-in" value={topic.title} onInput={(e) => updateTopic(i(), { title: e.currentTarget.value })} />
+                                  <input class="topic-in tt-in" value={topic.title} placeholder="Topic" onInput={(e) => updateTopic(i(), { title: e.currentTarget.value })} />
                                   <input class="topic-in td-in" placeholder="note" value={topic.note} onInput={(e) => updateTopic(i(), { note: e.currentTarget.value })} />
                                 </div>
                                 <button class="pin" classList={{ set: topic.done }} title="Mark done" onClick={() => updateTopic(i(), { done: !topic.done })}>{topic.done ? <CheckCircleIcon size={15} /> : <CircleIcon size={15} />}</button>
+                                <button class="topic-del" title="Remove topic" onClick={() => removeTopic(i())}>×</button>
                               </div>
                             )}
                           </For>
                         </div>
                       </div>
                     </div>
+                  </Match>
+
+                  <Match when={isBookText()}>
+                    <DraftsPane owner={CurrentDoc.id} />
+                  </Match>
+                  <Match when={CurrentDoc.kind === 'diff'}>
+                    <DraftsPane owner={CurrentDoc.id} />
+                  </Match>
+                  <Match when={showsBookGlance()}>
+                    <BookGlance />
                   </Match>
 
                   <Match when={CurrentDoc.kind === 'entity'}>
@@ -820,7 +681,7 @@ export default function Shell() {
           <span class="s hl">POV: {CurrentDoc.meta.pov}</span>
         </Show>
         <span class="sp"></span>
-        <Show when={CurrentDoc.id}>
+        <Show when={CurrentDoc.id && isChapter()}>
           <span class="s mono">{wordCount().toLocaleString()} words</span>
         </Show>
         <Show when={HasProject()}>
@@ -909,31 +770,6 @@ export default function Shell() {
         </div>
       </Show>
 
-      <Show when={NewChapterOpen()}>
-        <div class="modal-overlay" onClick={() => SetNewChapterOpen(false)}>
-          <div class="modal" onClick={(e) => e.stopPropagation()}>
-            <div class="modal-head">New chapter</div>
-            <div class="export-body">
-              <div class="export-field">
-                <label>Number</label>
-                <input type="number" step="0.1" value={NewChapterNumber()} onInput={(e) => SetNewChapterNumber(e.currentTarget.value)} />
-              </div>
-              <div class="export-field">
-                <label>Title</label>
-                <input value={NewChapterTitle()} placeholder="Untitled" onInput={(e) => SetNewChapterTitle(e.currentTarget.value)} />
-              </div>
-              <Show when={chapterNumberExists(NewChapterNumber())}>
-                <div class="export-result bad">Chapter {NewChapterNumber()} already exists — this will duplicate it. Use a decimal (e.g. {NewChapterNumber()}.5) or a free number.</div>
-              </Show>
-            </div>
-            <div class="modal-foot">
-              <button class="modal-cancel" onClick={() => SetNewChapterOpen(false)}>Cancel</button>
-              <button class="modal-go" onClick={runNewChapter}>Create</button>
-            </div>
-          </div>
-        </div>
-      </Show>
-
       <Show when={AssignOpen()}>
         <div class="modal-overlay" onClick={() => SetAssignOpen(false)}>
           <div class="modal" onClick={(e) => e.stopPropagation()}>
@@ -968,86 +804,10 @@ export default function Shell() {
         </div>
       </Show>
 
-      <Show when={NewEntityOpen()}>
-        <div class="modal-overlay" onClick={() => SetNewEntityOpen(false)}>
-          <div class="modal" onClick={(e) => e.stopPropagation()}>
-            <div class="modal-head">New entry{NewEntityColl() ? ` in ${EntityById(NewEntityColl())?.meta?.name}` : ''}</div>
-            <div class="export-body">
-              <div class="export-field">
-                <label>Name</label>
-                <input autofocus value={NewEntityName()} placeholder="Name"
-                  onInput={(e) => SetNewEntityName(e.currentTarget.value)} onKeyDown={(e) => { if (e.key === 'Enter') runNewEntity() }} />
-              </div>
-              <div class="export-field">
-                <label>Type</label>
-                <input list="entity-types" value={NewEntityType()} placeholder="Character, Location, Item…"
-                  onInput={(e) => SetNewEntityType(e.currentTarget.value)} />
-                <datalist id="entity-types"><For each={entityTypes()}>{(t) => <option value={t} />}</For></datalist>
-              </div>
-              <Show when={NewEntityColl() && EntityById(NewEntityColl())?.meta?.memberRule?.key}>
-                <div class="export-result">
-                  Joins “{EntityById(NewEntityColl())?.meta?.name}” via {EntityById(NewEntityColl())?.meta?.memberRule?.key} = {EntityById(NewEntityColl())?.meta?.memberRule?.value}.
-                </div>
-              </Show>
-            </div>
-            <div class="modal-foot">
-              <button class="modal-cancel" onClick={() => SetNewEntityOpen(false)}>Cancel</button>
-              <button class="modal-go" onClick={runNewEntity}>Create</button>
-            </div>
-          </div>
-        </div>
-      </Show>
-
-      <Show when={CtxMenu()}>
-        <div class="ctx-overlay" onClick={() => SetCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); SetCtxMenu(null) }}>
-          <div class="ctx-menu" style={{ left: `${CtxMenu().x}px`, top: `${CtxMenu().y}px` }} onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => { SetCtxMenu(null); SetBulkArc(''); SetArcModalOpen(true) }}>Set arc…</button>
-            <button class="ctx-danger" onClick={() => { SetCtxMenu(null); SetConfirmDeleteOpen(true) }}>
-              Delete{SelectedIds().length > 1 ? ` ${SelectedIds().length} chapters` : ''}…
-            </button>
-          </div>
-        </div>
-      </Show>
-
-      <Show when={ArcModalOpen()}>
-        <div class="modal-overlay" onClick={() => SetArcModalOpen(false)}>
-          <div class="modal" onClick={(e) => e.stopPropagation()}>
-            <div class="modal-head">Set arc · {SelectedIds().length} chapter{SelectedIds().length === 1 ? '' : 's'}</div>
-            <div class="export-body">
-              <div class="export-field">
-                <label>Arc</label>
-                <input list="bulk-arc-names" value={BulkArc()} placeholder="Arc name (leave blank for Unsorted)"
-                  onInput={(e) => SetBulkArc(e.currentTarget.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') applyArc() }} />
-                <datalist id="bulk-arc-names"><For each={ArcBands().filter((b) => b.arc)}>{(b) => <option value={b.arc} />}</For></datalist>
-              </div>
-            </div>
-            <div class="modal-foot">
-              <button class="modal-cancel" onClick={() => SetArcModalOpen(false)}>Cancel</button>
-              <button class="modal-go" onClick={applyArc}>Apply</button>
-            </div>
-          </div>
-        </div>
-      </Show>
-
-      <Show when={ConfirmDeleteOpen()}>
-        <div class="modal-overlay" onClick={() => SetConfirmDeleteOpen(false)}>
-          <div class="modal" onClick={(e) => e.stopPropagation()}>
-            <div class="modal-head">Delete {SelectedIds().length} chapter{SelectedIds().length === 1 ? '' : 's'}?</div>
-            <div class="modal-body">
-              <div class="confirm-msg">This permanently removes the chapter file{SelectedIds().length === 1 ? '' : 's'} from disk. This can't be undone.</div>
-            </div>
-            <div class="modal-foot">
-              <button class="modal-cancel" onClick={() => SetConfirmDeleteOpen(false)}>Cancel</button>
-              <button class="modal-go danger" onClick={runBulkDelete}>Delete</button>
-            </div>
-          </div>
-        </div>
-      </Show>
-
       <Show when={Importing()}>
         <ImportWizard />
       </Show>
+      <ToastHost />
     </div>
   )
 }

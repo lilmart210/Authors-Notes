@@ -1,0 +1,54 @@
+/* Drafts: chips, the chip-style Publish button, the draft log and the compare view
+   — ported from UI Artifacts/05 - Binder (proposal).html */
+.stagechip{ display:inline-block; font-size:10.5px; padding:1px 7px; border-radius:5px; border:1px solid var(--border); color:var(--dim); white-space:nowrap; }
+.stagechip.pub{ color:var(--accent); border-color:color-mix(in srgb, var(--accent) 45%, transparent); }
+.stagechip.changed{ color:var(--warn); border-color:color-mix(in srgb, var(--warn) 45%, transparent); }
+.edtag{ font-size:10px; color:var(--warn); margin-left:6px; }
+.edtag.dim{ color:var(--faint); }
+
+.pubbtn{ display:inline-flex; align-items:center; gap:5px; font:inherit; font-size:11.5px; padding:2px 9px; border-radius:5px; white-space:nowrap; vertical-align:middle; cursor:pointer;
+         border:1px solid color-mix(in srgb, var(--accent) 45%, transparent); color:var(--accent); background:transparent; }
+.pubbtn:hover{ background:var(--accent-soft); border-color:var(--accent); }
+.pubbtn:disabled{ color:var(--faint); border-color:var(--border); background:transparent; cursor:default; }
+.pubbtn.wide{ width:100%; justify-content:center; padding:6px 10px; font-size:12px; }
+.pubbtn.ghost{ color:var(--dim); border-color:var(--border); padding:2px 6px; }
+.pubbtn.ghost:hover{ color:var(--ink); }
+
+.stagebox{ padding:10px 9px; border-bottom:1px solid var(--border2); display:flex; flex-direction:column; gap:9px; }
+.draftline{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.counts{ font-size:11.5px; color:var(--faint); font-variant-numeric:tabular-nums; }
+
+.gitlog{ position:relative; display:flex; flex-direction:column; max-height:340px; overflow-y:auto; }
+.gitlog::before{ content:""; position:absolute; left:8px; top:12px; bottom:12px; width:2px; background:var(--border); }
+.gitrow{ position:relative; display:grid; grid-template-columns:18px auto minmax(0,1fr) auto; align-items:center; gap:7px; width:100%; text-align:left;
+         background:transparent; border:0; border-radius:7px; padding:6px 6px 6px 2px; cursor:pointer; font:inherit; color:var(--ink); }
+.gitrow:hover{ background:color-mix(in srgb, var(--accent-soft) 60%, transparent); }
+.gitrow.on{ background:var(--accent-soft); }
+.gitrow:disabled{ cursor:default; background:transparent; }
+.gitrow i{ width:10px; height:10px; border-radius:50%; background:var(--accent); justify-self:center; position:relative; z-index:1; box-shadow:0 0 0 3px var(--panel); }
+.gitrow.now i{ background:var(--panel); border:2px dashed var(--warn); }
+.gn{ font-size:12.5px; font-weight:600; }
+.gd{ font-size:11px; color:var(--faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gw{ font-size:11px; color:var(--faint); font-variant-numeric:tabular-nums; }
+
+/* compare view */
+.docscroll{ height:100%; overflow-y:auto; scrollbar-gutter:stable; background:var(--canvas); }
+.docwrap{ max-width:780px; margin:0 auto; padding:24px 28px 30vh; }
+.docwrap.wide{ max-width:940px; }
+.crumbline{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--faint); margin-bottom:8px; flex-wrap:wrap; }
+.crumbline a{ color:var(--dim); cursor:pointer; }
+.crumbline a:hover{ color:var(--link); text-decoration:underline; }
+.diffbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:6px 0 12px; }
+.diffbar .spacer{ flex:1; }
+.fbox.diffsel{ width:auto; padding:5px 8px; cursor:pointer; }
+.dstat{ font-size:12px; font-variant-numeric:tabular-nums; color:var(--dim); }
+.dstrip{ display:flex; gap:4px; overflow-x:auto; padding:2px 0 8px; margin-bottom:6px; }
+.dchip{ flex:none; min-width:32px; height:24px; padding:0 8px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--dim); font:inherit; font-size:11.5px; cursor:pointer; font-variant-numeric:tabular-nums; }
+.dchip:hover{ border-color:var(--accent); color:var(--ink); }
+.dchip.mid{ background:var(--accent-soft); border-color:transparent; }
+.dchip.from{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.dchip.to{ background:var(--good); border-color:var(--good); color:#fff; }
+.diffsheet{ background:var(--page); border:1px solid var(--border2); box-shadow:var(--shadow); border-radius:2px; padding:30px 40px; color:var(--ink);
+            font-family:"Iowan Old Style","Palatino Linotype",Georgia,Cambria,serif; font-size:16px; line-height:1.72; white-space:pre-wrap; }
+.diffsheet ins,.dstat ins{ text-decoration:none; background:color-mix(in srgb, var(--good) 24%, transparent); border-radius:2px; }
+.diffsheet del,.dstat del{ color:var(--dim); background:color-mix(in srgb, #c4384a 18%, transparent); text-decoration:line-through; text-decoration-color:color-mix(in srgb, #c4384a 70%, transparent); border-radius:2px; }

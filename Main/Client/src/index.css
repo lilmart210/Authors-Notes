@@ -431,3 +431,26 @@ body{ background:var(--bg); color:var(--ink); overflow:hidden;
 .insp-open{ font:inherit; font-size:12.5px; color:var(--accent); background:transparent; border:1px solid var(--border);
             border-radius:8px; padding:6px 10px; cursor:pointer; width:100%; }
 .insp-open:hover{ background:var(--accent-soft); border-color:var(--accent); }
+
+/* ---------- shared binder pieces (covers, progress bars, toast, menu separators) ---------- */
+.tcover{ width:100%; height:100%; background:var(--page); color:var(--ink); display:flex; flex-direction:column; justify-content:space-between; padding:12% 10%; position:relative;
+         font-family:"Iowan Old Style","Palatino Linotype",Georgia,Cambria,serif; }
+.tcover::before{ content:""; position:absolute; left:10%; right:10%; top:8%; height:2px; background:var(--accent); }
+.tcover .ct{ font-size:26px; line-height:1.1; font-weight:600; text-wrap:balance; margin-top:14%; }
+.tcover .ca{ font-size:12px; color:var(--dim); letter-spacing:.12em; text-transform:uppercase; font-family:system-ui,"Segoe UI",Roboto,sans-serif; }
+.tcover.thumb{ padding:0; justify-content:center; align-items:center; }
+.tcover.thumb::before{ top:5px; left:5px; right:5px; height:1.5px; }
+.tcover.thumb .ct{ font-size:20px; margin:0; }
+.cover-img{ width:100%; height:100%; object-fit:cover; display:block; }
+.bar{ height:4px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:6px; }
+.bar i{ display:block; height:100%; background:var(--accent); border-radius:3px; }
+.bar.big{ height:6px; }
+.ctx-sep{ height:1px; background:var(--border); margin:5px 4px; }
+.toast{ position:fixed; left:50%; bottom:38px; transform:translateX(-50%); background:var(--chrome); border:1px solid var(--border); box-shadow:var(--shadow); border-radius:9px;
+        padding:8px 8px 8px 14px; font-size:12.5px; color:var(--ink); display:flex; gap:10px; align-items:center; z-index:200; max-width:calc(100% - 32px); }
+.toast button{ background:transparent; border:0; color:var(--link); cursor:pointer; font:inherit; font-size:12.5px; padding:3px 8px; border-radius:6px; font-weight:600; }
+.toast button:hover{ background:var(--accent-soft); }
+.topic-del{ flex:none; background:transparent; border:0; color:var(--faint); cursor:pointer; opacity:0; font-size:14px; padding:0 2px; }
+.topic:hover .topic-del{ opacity:1; }
+.topic-del:hover{ color:#d05a68; }
+.dock .stagebox{ border-bottom:1px solid var(--border2); }

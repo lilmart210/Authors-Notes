@@ -321,13 +321,14 @@ export function ProjectProvider(props) {
   }
   const chapterNumberExists = (n) => n != null && ChapterBodies().some((c) => c.number === Number(n))
 
-  async function AddChapter({ number, title = '', status = 'draft', open = true } = {}) {
+  // `arc` places the chapter in that arc; when omitted it inherits the last chapter's arc.
+  async function AddChapter({ number, title = '', status = 'draft', open = true, arc: arcName } = {}) {
     if (!Project.dir) return
     const num = number != null && number !== '' ? Number(number) : nextChapterNumber()
     const id = format.generateId()
     const file = format.chapterFileName(title, id)
     const meta = { id, title, type: 'chapter', number: num, status }
-    const arc = lastChapterArc()
+    const arc = arcName !== undefined ? arcName : lastChapterArc()
     if (arc) meta.arc = arc
     await service.saveDocument(Project.dir, file, meta, '')
 
@@ -375,14 +376,13 @@ export function ProjectProvider(props) {
   async function DeleteChapters(ids) {
     if (!Project.dir || !ids.length) return
     const group = manuscriptGroup()
-    for (const id of ids) {
-      const child = group?.children.find((c) => c.id === id)
-      if (child) await service.deleteChapter(Project.dir, child.file).catch(console.error)
-      if (containerApi) {
-        const tab = containerApi.Tabs().find((t) => t.key === `ch:${id}`)
-        if (tab) containerApi.RemoveTab(tab.id)
-      }
-    }
+    const doomed = ids.map((id) => group?.children.find((c) => c.id === id)).filter(Boolean)
+    // Forget them first: closing a tab flushes the open doc, and closing a chapter's
+    // last view persists its text — either would write a deleted file back.
+    for (const child of doomed) docSync.discardDoc(child.file)
+    forgetDocs(ids)
+    closeTabsWhere((tab) => ids.includes(tab.docId) && (tab.dkind === 'chapter' || tab.dkind === 'diff'))
+    for (const child of doomed) await service.deleteChapter(Project.dir, child.file).catch(console.error)
     SetProject('manifest', produce((manifest) => {
       const g = manifest.tree.find((node) => node.kind === 'group')
       if (g) g.children = g.children.filter((c) => !ids.includes(c.id))
@@ -390,7 +390,15 @@ export function ProjectProvider(props) {
     await service.saveManifest(Project.dir, unwrap(Project.manifest))
     SetChapterBodies(ChapterBodies().filter((c) => !ids.includes(c.id)))
     rebuildIndex()
-    if (ids.includes(CurrentDoc.id)) SetCurrentDoc({ kind: null, id: null, file: null, meta: null, body: '' })
+  }
+
+  // A document is being deleted: if it's the open one, drop its pending autosave
+  // and stop treating it as current (so nothing writes it back).
+  function forgetDocs(ids) {
+    if (!ids.includes(CurrentDoc.id)) return
+    if (SaveTimer) clearTimeout(SaveTimer)
+    SaveTimer = undefined
+    SetCurrentDoc({ kind: null, id: null, file: null, root: null, meta: null, body: '' })
   }
 
   // Keep every open tab's label in sync when a chapter is renamed/renumbered.
@@ -790,7 +798,7 @@ export function ProjectProvider(props) {
 
   // --- timeline / plotline ---
   function OpenTimeline(options) {
-    openTabFor({ key: 'timeline', dkind: 'timeline', docId: '__timeline__', file: null, title: 'Series Timeline' }, options)
+    openTabFor({ key: 'timeline', dkind: 'timeline', docId: '__timeline__', file: null, title: 'Outline' }, options)
   }
 
   // The whole-bible connection graph (every entity + its relationships).
@@ -1040,7 +1048,7 @@ export function ProjectProvider(props) {
     rebuildIndex()
   }
   const binder = createBinderApi({
-    Project, trackSave, openTabFor, closeTabsWhere, retitleTabs, flushSave, CurrentDoc,
+    Project, trackSave, openTabFor, closeTabsWhere, retitleTabs, flushSave, forgetDocs, CurrentDoc,
     ChapterBodies, ChapterById, UpdateChapterMeta, ReplaceChapterBody, ArcBands,
     Cards, SetCards, reloadCards, OpenEntityById, UpdateMeta,
   })

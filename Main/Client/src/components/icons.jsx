@@ -154,3 +154,80 @@ export const TrashIcon = (props) =>
       <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
     </>
   ))
+
+// --- binder ---
+export const FolderIcon = (props) => base(props, <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />)
+export const FileTextIcon = (props) =>
+  base(props, (
+    <>
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+      <path d="M14 3v6h6M8 13h8M8 17h5" />
+    </>
+  ))
+export const ArcIcon = (props) =>
+  base(props, (
+    <>
+      <path d="M4 18c4-9 12-9 16 0" />
+      <circle cx="4" cy="18" r="1.6" />
+      <circle cx="20" cy="18" r="1.6" />
+    </>
+  ))
+export const QuoteIcon = (props) => base(props, <path d="M10 7H6a2 2 0 0 0-2 2v3h6V7zM10 12c0 3-1.5 5-4 6M20 7h-4a2 2 0 0 0-2 2v3h6V7zM20 12c0 3-1.5 5-4 6" />)
+export const LinesIcon = (props) => base(props, <path d="M4 6h16M4 10h16M4 14h10M4 18h13" />)
+export const GlobeIcon = (props) =>
+  base(props, (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+    </>
+  ))
+export const MoreIcon = (props) =>
+  base(props, (
+    <>
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+    </>
+  ))
+export const PencilIcon = (props) => base(props, <path d="M4 20h4L19 9l-4-4L4 16z" />)
+export const CopyIcon = (props) =>
+  base(props, (
+    <>
+      <rect x="8" y="8" width="12" height="12" rx="2" />
+      <path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+    </>
+  ))
+export const ScissorsIcon = (props) =>
+  base(props, (
+    <>
+      <circle cx="6" cy="6" r="3" />
+      <circle cx="6" cy="18" r="3" />
+      <path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12" />
+    </>
+  ))
+export const SendIcon = (props) =>
+  base(props, (
+    <>
+      <path d="m22 2-7 20-4-9-9-4z" />
+      <path d="M22 2 11 13" />
+    </>
+  ))
+export const CompareIcon = (props) =>
+  base(props, (
+    <>
+      <circle cx="18" cy="18" r="3" />
+      <circle cx="6" cy="6" r="3" />
+      <path d="M13 6h3a2 2 0 0 1 2 2v7M11 18H8a2 2 0 0 1-2-2V9" />
+    </>
+  ))
+export const RestoreIcon = (props) =>
+  base(props, (
+    <>
+      <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+      <path d="M3 3v5h5" />
+    </>
+  ))
+export const DownloadIcon = (props) => base(props, <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />)
+export const StarIcon = (props) => base(props, <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />)
+export const XIcon = (props) => base(props, <path d="M18 6 6 18M6 6l12 12" />)
+export const CheckIcon = (props) => base(props, <path d="M5 13l4 4L19 7" />)

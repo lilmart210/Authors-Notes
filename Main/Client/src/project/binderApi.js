@@ -26,7 +26,7 @@ const blankPage = (page) => ({ meta: book.defaultBookMeta(page), body: '' })
 
 export function createBinderApi(ctx) {
   const {
-    Project, trackSave, openTabFor, closeTabsWhere, retitleTabs, flushSave, CurrentDoc,
+    Project, trackSave, openTabFor, closeTabsWhere, retitleTabs, flushSave, forgetDocs, CurrentDoc,
     ChapterBodies, ChapterById, UpdateChapterMeta, ReplaceChapterBody, ArcBands,
     Cards, reloadCards, OpenEntityById, UpdateMeta,
   } = ctx
@@ -109,6 +109,8 @@ export function createBinderApi(ctx) {
 
   // Stamp the current text as the working draft number. Nothing is uploaded.
   async function PublishDraft(owner, note = '') {
+    // land the chapter's latest keystrokes first, so the stamp matches what's saved
+    if (!isBookOwner(owner) && ChapterById(owner)) docSync.flushDoc(ChapterById(owner).file)
     const doc = DraftDoc(owner)
     if (!doc || !drafts.canPublish(doc.meta, doc.body)) return false
     await LoadDrafts(owner)
@@ -220,6 +222,13 @@ export function createBinderApi(ctx) {
     }
   }
 
+  // Planned length (Overview × arc overrides) with how much is written per arc.
+  const hasText = (chapter) => Boolean(String(chapter.body || '').trim() || chapter.meta?.lastDraft)
+  function PlanSummary() {
+    const arcs = ArcNames().map((name) => ({ name, plan: ArcPage(name).meta.plan ?? '', written: ArcChapters(name).filter(hasText).length }))
+    return book.planTarget(Book.overview.meta.plan, arcs)
+  }
+
   function OpenArc(name, options) {
     openTabFor({ key: `arc:${name}`, dkind: 'arc', docId: name, file: null, title: name || 'Untitled arc' }, options)
   }
@@ -321,9 +330,10 @@ export function createBinderApi(ctx) {
     await flushSave()
     const doomed = [card, ...descendantsOf(card)]
     const backup = doomed.map((c) => ({ root: c.root, file: c.file, meta: unwrap(c.meta), body: c.body }))
-    await service.deleteCard(Project.dir, card)
     const ids = new Set(doomed.map((c) => c.meta.id))
+    forgetDocs([...ids]) // before tabs close, or closing them would save the page back
     closeTabsWhere((tab) => ids.has(tab.docId))
+    await service.deleteCard(Project.dir, card)
     await reloadCards()
     return async () => {
       for (const saved of backup) await service.saveCard(Project.dir, saved.root, saved.file, saved.meta, saved.body)
@@ -386,7 +396,7 @@ export function createBinderApi(ctx) {
     // drafts
     DraftDoc, DraftList, LoadDrafts, PublishDraft, RestoreDraft, OpenDiff,
     // arcs
-    ArcNames, ArcPage, ArcChapters, UpdateArc, CreateArc, RenameArc, DeleteArc, OpenArc,
+    ArcNames, ArcPage, ArcChapters, PlanSummary, UpdateArc, CreateArc, RenameArc, DeleteArc, OpenArc,
     // pages
     PagesIn, ColumnsOf, FieldsOf, CreatePage, AddPagesTo, RenamePage, UpdatePageMeta, DeletePage, DuplicatePage, MovePage,
     // lifecycle (used by ProjectContext)

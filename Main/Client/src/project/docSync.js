@@ -74,6 +74,16 @@ export function docString(key) {
   return entry ? entry.ydoc.getText('document').toString() : null
 }
 
+// The file is being deleted: drop any pending save and never persist this doc
+// again (closing its last view would otherwise write the file back).
+export function discardDoc(key) {
+  const entry = registry.get(key)
+  if (!entry) return
+  if (entry.timer) clearTimeout(entry.timer)
+  entry.timer = null
+  entry.persist = null
+}
+
 // Replace the whole text of an open shared doc (restoring a draft). Every view
 // bound to it updates, and the normal debounced save writes it. False if not open.
 export function replaceText(key, text) {
