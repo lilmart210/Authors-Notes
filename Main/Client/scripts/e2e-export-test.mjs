@@ -18,6 +18,7 @@ runE2E(String.raw`
   const stem = target.slice('chapters/'.length, -3)
   put(target, file(target).replace('\n---\n', '\nlastDraft: {"n":1,"date":"2026-10-01T00:00:00.000Z","hash":"0"}\n---\n'))
   put('chapters/.drafts/' + stem + '/001.md', '---\nn: 1\ndate: 2026-10-01T00:00:00.000Z\n---\n\nTHE PUBLISHED DRAFT TEXT.')
+  const publishedCount = chapterFiles.filter((p) => /\nlastDraft:/.test(file(p))).length
 
   // Watch for the print dialog (the print PDF path).
   let printed = 0
@@ -83,11 +84,11 @@ runE2E(String.raw`
   click(chip('Published only'))
   click(chip('Latest published drafts'))
   await sleep(100)
-  check(foot().startsWith('1 chapter ·'), 'Published only narrows to the one published chapter (' + foot() + ')')
+  check(foot().startsWith(publishedCount + ' chapter'), 'Published only narrows to the ' + publishedCount + ' published chapters (' + foot() + ')')
   check((document.querySelector('.pv-text')?.textContent || '').includes('THE PUBLISHED DRAFT TEXT'), 'the preview shows the published draft text')
   await exportNow()
   const markdown = file('exports/The Strongest World.md') || ''
-  check(markdown.includes('THE PUBLISHED DRAFT TEXT') && (markdown.match(/^# /gm) || []).length === 1, 'Markdown holds just the published draft')
+  check(markdown.includes('THE PUBLISHED DRAFT TEXT') && (markdown.match(/^# /gm) || []).length === publishedCount, 'Markdown holds just the published chapters, as published')
 
   // --- Range ---
   await openExport()

@@ -1,0 +1,145 @@
+---
+id: ee4f95ccc8cbf
+title: Forced
+type: chapter
+number: 2
+arc: The Auction
+pov: Qin Peizhi
+lastDraft: {"n":1,"date":"2026-07-28T12:00:00.000Z","hash":"50220790"}
+---
+
+An arrow began to spin before turning into a deluge of waves. The arrow could no longer be seen clearly and myriad ripples appeared on a stone's surface. They grew weaker in intensity before finally disapearing altogethor. The stone appeared no different from any other rock.
+
+"Big sis, is this it?" 
+
+The shortest of three hooded figures called out in a small and soft voice. The eyes hidden beneath a black cloak had been intensely watching a stone in its hands.
+
+The largest of the three nodded, "This is the spot!"
+
+The Biggest of the three stuck a double edged sword in the mud and picked a fallen log to rest on. Having come this far, she was rather confident, but she had not forgotten their recent capture.
+
+"Stay ready, the rift could come at anytime, whether we finally escape comes down to this moment"
+
+Eying her younger sisters, The eldest sister made such a remark. 
+
+Thats right, this was the most crucial time for them, but contrary to those words, the tension from constantly running could be seen leaving their shoulders as all of them found a spot amongst the clearing to sit.
+
+How long had they been chased?
+
+When did everything go wrong?
+
+Why was it them who suffered?
+
+The youngest sat a stone in the center of the clearing. Looking at the stone that laid in front, this was the reason the they entered the eyes of so many people.
+
+Another shadow gently removed the hooded cloak that covered her head, long cuts,scars and blood could be seen staining the image of a fair maidens' face. Such features were hard to find even in Extreme Path City. In the past, such an appearance would have been greatly appreciated.
+
+"Junior sisters, do you have any idea where this stone leads?" 
+
+Their was no response, they only sat and looked at each other in the dark.
+
+They had no answer. In fact, how could they?
+
+"Big sis, neither of our families knew about these things. If it wasn't for our families trying to sell our old belongings, we wouldn't know we had such a thing."
+
+"Mhmm." She nodded in agreement, it would be odd if they really did know. Taking a few thoughtful breaths, she began speaking her own ideas,"Actually, I believe this stone leads to a new world. Have you heard of a hidden realm? Inheritences left by a supreme being? haha, I bet our clans could even be descendants.  This could be seen as providence, why else would we be put in such a difficult situation. This is our chance..."
+
+Of the two left listening, only one truly enthralled. Before they became outlaws, the Eldest sister had always dreamed of roaming the world as a cultivator, However as the Eldest sibling in her family, she was left with little choice but to be married off. Out of the three, she could be considered to be the least affected. Atleast, she was never on good terms with either her family or the one she was forced into.
+ 
+As if it matters now, since after the weird rock known as a world revealing stone was discovered in their clans belongings, nothing had went right. Elites from neighboring cities and sects flooded in, scouring any and all second and third rate clans. Being located outside of the prominent cities meant that they could not rely on suport from the government. Those clans that were not strong enough was razed in the haze. They took whatever they deemed useful, raided whatever they owned, killed whoever they saw. 
+
+Some weaker municipalities were even razed in the process. These three were the only people left from each of their different families. They only survived because they were studying at the academy in Extreme Path City. They hadn't known until it was too late.
+
+'Surviving is pointless.'
+
+This is what the second sister thought.
+
+Absentmindedly looking around, she decided to observe the night. In this forest, it was as dark as it could be. Reaching her hand into the space, it seemed to vanish into the air. A little bit of pale glow began circulating in her body and the once dark hand was now clearly visible.
+
+Finding it better to take her mind of such trivialties, she began practicing her spirit cycling method. It was a basic one they taught at every academy in the city. This one in particular only focused on harnesing external spirit slowly. It was nothing special.
+
+Cultivating to the other two chatter, she felt oddly relaxed and at ease. A pale blue glow began to wash over her and the other two. Soon the entire clearing was glowing.
+
+"Its here!"
+
+They immediately shot up, the World Revealing stone had broken apart and formed into a small blue pearl, it was radiating energy and sending intense tremors into the surroundings.
+
+The biggest of the three dashed and grabbed hold of the stone, bringing it near the other two. They grabbed onto the light and all of them were overcome with emotion.
+
+'Its finally over!'
+
+Was what all of them thought, with the stone's glow slowly expanding to cover all of them, they were relieved.
+
+But out of the corner of her eye, the youngest noticed a smile hidden in the dark.
+
+It was a smile she hadn't seen before. It reeked of savagery and blood. It seemed Cruel as well as hungry. Bone white teeth began to appear in the darkness, indicating it's excitment and ghoulish eyes widened as they stared listlessly. It had found what it was looking for. It was extremely terryfying but she hadn't been able to look for long before the blue light consumed her and her surroundings, dissapearing into the light...
+
+---------------------
+
+"Boss, why did we let them go?"
+
+Several men dawning metal plates and broad swords also had this question. They had been watching this group the entire time as they sat in a circle around some stone. For hours, they could only think about the reward that capturing those brats would bring. It had them drooling at the prospect of the promised slaughter. Who had given them this task? They dealt with big players, naturally the city lord assistant would give them immense benefits.
+
+"Its just that..."
+
+Turning around slowly,
+
+"I can only turn in things I have no use for..."
+
+The men were puzzled,"Boss, You mean-"
+
+cutting his subbordinate off from speaking, was a sword through his chest.
+
+"Y-You!"
+
+gripping his own sword in response, he strugled to lift it higher. He was in disbelief as red blood seeped out of his chest in large quantities. The metal plates he had on were like paper in front of this strength.
+
+The boss began twisting it causing the soldier to stumble and pale even more. After a few seconds, there was no longer a struggle to resist. The soldier fell to the ground, dead.
+
+The others were stuned when the saw this and immediately attacked togethor.
+
+Unfortunately, the boss was a bonafide Earth Realm Practitioner. A glow eminated from within as a pale light exited his body. The wind wale as a gust knocked all of them away.
+
+"Whats the meaning of this!?"
+
+Stumbling to their feet, the Group began shouting and looking around, all of them were equally shocked. The boss had always been magnanimous and would never resort to such betrayal but it seems that the benefits were just never high enough.
+
+A bronze man stepped forward and exclaimed, "If you do this, the city lords will never let you go! Don't You know whats at stake here!?" 
+
+Readying his sword, he gave his boss a hard look.
+
+"Don't blame me, blame the world for this. he-he~"
+
+With that said, his eyes began to take on a black color, The man who stepped forward paled but the boss had already dashed past him. Several sword slashes lashed out unpredictably.
+
+Boom!
+
+The bronze man had exploded into a several large chunks and with the rest of his men in his gaze, he dashed wildly into the crowd of people.
+
+Like a wolf amongst sheep, the boss cut away at any he saw near him. Limbs were severed and blood was strewn about. It was a complete one sided slaughter. The boss had only brought some Mortal stage practictioners and with the strongest being in Bloodline Awakening, none was able to fight back against his superior level of strength. The result can only be as expected.
+
+Maniacal laughter could be heard for miles, making the dark forest even more haunting than it already was. Men were slaughtered left and right, Despite the cries for mercy they were cut down regardless.
+
+Amidst the screams, there were calls for help but there was no lights or disturbances amidst the surroundings.
+
+Of course in this wilderness, there was no one there to hear it.
+
+"hehee-hehe, I've got quite the luck today." Blood and viscera stained the body of the last two men standing in the forest. Shaking while looking at the monster in front of them, the last man mind caved and turned tail and ran. But it was too late as the demonic human was already upon him.
+
+The bossman was jittery, ecstatic even, cutting down the last person, his black eyes darkened even more and faint light began to arise from the bodies of those slain. Dark crystals and stones formed on the body parts wherever the light exited. They gathered quickly in front of his face and formed a small ball.
+
+Taking a bite, he felt a rush of vigorous energy, strength began to invade his spirit and his body brightened temporarily in response. He sat down to digest it better.
+
+'Although a little on the weak side, this was a nice harvest. A shame I must give up on the work I've done so far outside the city.'
+
+Connections, embezzlement, blackmail, trafficking. This was his primary means of making a living. He was quite good at it too. More official than banditry but twice as devious. It could be said he did the things that proper individuals needed but couldn't do themselves. All of this would be gone starting from now.
+
+He had no intentions of coming back, now that he found a hidden realm. He had every intention to stay there. Hidden realms held both danger and treasures. Some even secret inheritances. He would monopolize an entire realms worth of treasure, just thinking of it made him shiver in excitement. 
+
+He began looting what remained of his underlings while remembering the taste of their power. He actually found this technique quite recently and have been astounded with its effects. This is a devil technique which allows him to consume the potential energy of his victims. Often reffered to as 'vitality'. If the world knew he had this, they would certainly hunt him down to the ends of the earth. Such techniques were considered improper, warranting their eradications. However, he has made more progress in the last few months than the past few years. He could never let this technique go. Counting his new belongings, There was pills, gold and other possessions but all of these things were of low value to him. 
+
+"Trash, the lot of them!"
+
+Grunting and looking at the clearance where the blue light faded, he took his steps slowly.
+
+Although it seemed random, each step appeared to follow a specific method. The further he walked, the more he faded into obscurity. Eventually he vanished all togethor.

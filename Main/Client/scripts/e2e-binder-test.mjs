@@ -41,22 +41,25 @@ runE2E(String.raw`
   check(overview.includes('title: Strongest World E2E') && overview.includes('"perArc":20'), 'Overview writes book/overview.md (title + plan)')
   check((document.querySelector('.booktitle')?.textContent || '') === 'Strongest World E2E', 'sidebar book row follows the title')
 
-  // --- Blurb: write, publish draft 1 ---
+  // --- Blurb: write, publish the next draft ---
+  const blurbBefore = Number(((file('book/blurb.md') || '').match(/"n":(\d+)/) || [])[1] || 0)
+  const nextBlurb = blurbBefore + 1
+  const blurbDraftFile = 'book/.drafts/blurb/' + String(nextBlurb).padStart(3, '0') + '.md'
   click(rowNamed('Blurb'))
   const blurbCm = await until(() => document.querySelector('.bookdoc .cm-content'))
   check(!!blurbCm, 'Blurb opens with an editor')
-  typeInto(blurbCm, 'The end always justifies the means.')
+  typeInto(blurbCm, ' The end always justifies the means.')
   await sleep(2500)
   check((file('book/blurb.md') || '').includes('The end always justifies the means.'), 'Blurb text saves to book/blurb.md')
   const publishBlurb = await until(() => document.querySelector('.dock .pubbtn.wide'))
-  check(publishBlurb && !publishBlurb.disabled && publishBlurb.textContent.includes('Publish draft 1'), 'right panel offers "Publish draft 1" for the blurb')
+  check(publishBlurb && !publishBlurb.disabled && publishBlurb.textContent.includes('Publish draft ' + nextBlurb), 'right panel offers "Publish draft ' + nextBlurb + '" for the blurb')
   click(publishBlurb)
-  await until(() => file('book/.drafts/blurb/001.md'))
+  await until(() => file(blurbDraftFile))
   await sleep(2500)
-  check((file('book/.drafts/blurb/001.md') || '').includes('The end always justifies'), 'publishing writes book/.drafts/blurb/001.md')
-  check((file('book/blurb.md') || '').includes('lastDraft:'), 'blurb.md is stamped with its last draft')
+  check((file(blurbDraftFile) || '').includes('The end always justifies'), 'publishing writes ' + blurbDraftFile)
+  check((file('book/blurb.md') || '').includes('"n":' + nextBlurb), 'blurb.md is stamped with its last draft')
   const afterPublish = document.querySelector('.dock .pubbtn.wide')
-  check(afterPublish && afterPublish.disabled && afterPublish.textContent.includes('Publish draft 2'), 'button stays, moves to draft 2, greyed until something changes')
+  check(afterPublish && afterPublish.disabled && afterPublish.textContent.includes('Publish draft ' + (nextBlurb + 1)), 'button stays, moves to draft ' + (nextBlurb + 1) + ', greyed until something changes')
 
   // --- Chapter: publish, edit, compare, restore ---
   click(document.querySelector('.binder .node.arc .tw')) // arcs start collapsed

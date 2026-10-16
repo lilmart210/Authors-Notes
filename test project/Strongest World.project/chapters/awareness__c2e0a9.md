@@ -1,0 +1,172 @@
+---
+id: c2e0a90aa3898
+title: Awareness
+type: chapter
+number: 4
+arc: The Auction
+pov: Qin Peizhi
+lastDraft: {"n":1,"date":"2026-07-28T12:00:00.000Z","hash":"52fd8f69"}
+---
+
+Clang!
+
+
+Two Swords were deadlocked in position, They had been fighting for the greater part of an hour with neither side giving way to the other. The ground was littered in markings of the sword and palm, some even went a meter deep.
+
+"mid-rank foundation establishment, is this all that you amount to after becoming a devil cultivator? I was told someone of note would be tracking these few."
+
+Qin Peizhi voice was calm and collected. he was not too overbearing in his manner of speech, but his opponent seemed to be infuriated by his words.
+
+"Humph, you jest! What does someone like you understand?"
+
+The man had long since stopped smiling and his black eyes grew darker. His veins began to swell while his skin turned a turbid color. Even the blood beneath began to boil, turning black as well.
+
+'Sacrificial Summoning!'
+
+The man began exuding dangerous amounts of energy, pushing Peizhi back several steps, he felt a rush of power, similar to when he digest the essence of his victims.
+
+"Without risk, how could I advance further?" 
+
+Taking a large swing at Peizhi, the man was also coming close to loosing his reasoning,
+
+"Without backing, how could I grow stronger?"
+
+Taking several more stabs, he kept pushing forward. His sword now had large amounts of energy stored within that it even began showing cracks. The city lord was pushed back several more steps, all the while eying his change, frowning.
+
+"You always take whats good and leave less than scraps for the rest of us, how are we to survive like people?!"
+
+'Screech of the Heavenly Demon!'
+
+Rawr!
+
+The man let out the shrieks of a thousand pretrified ghost, rattling the entire cave. Nearby, stalactites were torn from the cieling roof and the rocks on the ground were thrown afar.
+
+Qin Peizhi was blasted back a hundred feet, he manipulated his body to land softly along the walls.
+
+'gah-What power! Is this a technique based on sound? A rare find indeed.'
+
+But his facial expressions betrayed his excitement, Qin Peizhi suddenly felt a splitting headache from being so close to the sound but remained strong in his defense. Dodging fallen rocks, He defended against dozens of sword strikes while the reverberations of the earlier screech continued to ring loud in his mind.
+
+Slowly his cultivation began to rise, from mid-rank Foundation establishment to peak Foundation Establishment.
+
+"You! You! You! You! Why won't you die!"
+
+The mans ramblings continued, but Qin Peizhi only matched his attacks in kind. For each stab, he would counter with the same strength in silence, observing each and every action taken.
+
+Several incense sticks worth of time passed before the mans attacks slowly began to relent. Qin Peizhi countered with equal strength however the man seemed unable to take the attacks.
+
+"Your body can't handle it any longer, will you be able to continue?"
+
+Qin Peizhi spoke up, there was actual concern in his voice as he watched the man too far gone in his mumblings to respond.
+
+Deflecting a sword, Peizhi noticed the mans cultivation dropping,
+
+'...Peak...'
+
+Several more attacks would flash by but Peizhi would only dodge,
+
+'Mid-rank...low-rank...Mortal stage... This, development...there is something wrong...'
+
+From the peak of the foundation establishment to the mortal stage, Peizhi watched the mans cultivation drop.
+
+"Kill, kill, kill..."
+
+His appearance became wretched, blackened eyes, yellowed skin and a lack of vitality. He seemed to have aged dozens of years in merely an hour. Yet he kept fighting, unable to stop. 
+
+"I've seen enough"
+
+Swinging his blade, blue light illuminated its edge. With a single stroke, the man was bisected in two. The blood spilt was black and murky, it appearance smelled foul and before the body could even reach the ground, it began to crumble apart like hot ash in a camp fire.
+
+'Such vile characteristics...I've seen deviation before, but not like this.' 
+
+Peizhi once again frowned at the scene. He quickly swiped at a falling pouch before it could land amongst the dead.
+
+'Shou Shan had explained previously that he had a diviner amongst the search team, just were coud he have gone? Instead I've met with this devil. But why does he seem somewhat familiar?'
+
+Peizhi pondered the scene, out of all of the nearby factions, there seemed to be one who he could have been.
+
+'Meng Kang? or was it Xiang Jianjun? Both had descriptions that could have been this fella here.'
+
+He put the matter to the side as he decided to open the pouch instead. In truth he agreed with the slain man, there was truly nothing of value left for them to use after the big groups made their move. He frequently mediated disputes over resources and the upcoming auction was just a way to distribute such resources somewhat fairly amongst other big factions.
+
+Sects regards everything outside of themselves as fruits to be picked. He wouldn't need to go through so much effort if those old monsters were not hell bent on taking everything for themselves.
+
+He wouldn't need to do what he's doing now.
+
+Inside the pouch was primarily pills and gold. However there were two crystals inside which caught his attention immediately. Touching the bigger crystal, he felt a cool sensation and a vast flow of information flow into his mind. 
+
+There was formations, techniques and formulas for smithing artifacts. All of these were related to divination and Peizhi no longer thought about what happened to the diviner. He was originally after this anyways.
+
+Withdrawing his mind from the abundance of information, he looked Nearby at a glowing orb of energy, he made a motion to grab it and it flew within his grasp. Holding it, he could feel an immense amount of power within as it began hardening into a solid substance. It was almost too much. He had held spiritual elixirs before but he had never heard of them being able to produce a sensation similar to the one he was feeling currently. He became interested but this was not something he could use without understanding it more first.
+
+Turning his attention to the smaller of the two crystals, his hand had only lightly tapped the crytal when he heard screams rush into his head. He immediately withdrew his senses and held his head for comfort. 
+
+Blood began dripping from his eyes and nose.
+
+'Damnit! Even the Book is abnormal!'
+
+looking at the crystal that caused him even more pain than the screech from earlier, he tossed it back into the pack and meditated. With his mind in a mess from earlier, he missed the ramblings of the book. Unlike the orthodox methods, devil technique is often passed down in strange ways. He had encountered them before and each time was a suprise to him. The screech was both an attack and a technique, it held many truths but it was difficult to discern its true meaning. 
+
+"He must have been desperate, to withstand that nonsense for more power. What wouldn't we do for more power?"
+
+Taking a look around the cave once more, Qin Peizhi shook his head.
+
+'Truly, what wouldn't we do?'
+
+After a period of time, he touched the Devil Technique crystal once more. He heard a screach however this time he was ready for it. His mental fortitude protected his mind as he listened to the sound repeatedly. He gradually understood the essence of the cultivation technique.
+
+It was a sacrificial technique. Perhaps due to the low strength of the man whom he killed, he was probably unable to discern the cultvation process, only the method of vitality extraction.
+
+The method require taking the vitality from other beings. The older the being, the worse the vitality was. At the same time, until a certain age, one would have no usable vitality. It was most effective when the essence of young mortal realm practictioners was extracted. You could reinforce your own life with this energy or burn it later to strengthen an attack. This was what his opponent did earlier.
+
+Although he wouldn't be using the technique in this way, the method of vitality extraction could prove useful. Qin Peizhi was never stingy on how he cultivated, but the effects of this technique were truly too terrible. He would still rather die somewhat a noble death and not scattered as foul waste amongst the dirt should he loose his mind.
+
+He began circulating the Devil Technique according to what he learned from the screaching. 
+
+Qin Peizhi felt his inner energy become joubilant and unrestrained. He kept going despite his internal energy running amok his body. 
+
+His eyes flashed and began to darken to nearly black in color. His wild energy began to calm down and the air about him became ghostly still, gradually his appearance reverted back to his normal self. Unlike the man he killed previously, there was no ominous aura that surrounded him or impulses to guide him. 
+
+He was in control.
+
+Looking at the orb of pure energy, his senses noticed things he couldn't before,
+
+'Crap, its shrinking! The portions that can't crystalize won't stay long without a fleshly body, the energy can only scatter, I either use it now or never.'
+
+Originally, he planned to wait until he was more comfortable with the circulation method, but he could not stop the energy from leaking. He grabbed ahold of the energy and subconsciously looked back at the three dead girls.
+
+His plan revolved around them getting here alive as his forged World Revealing Stone only pointed at the location of the stolen World Revealing stone and not the hidden world. To him, It didn't matter who was in possesion of the stone. He also had no intention of killing anyone, regardless of who made it here. He would simply sneak by and leave their lives up to fate. 
+
+Reality however, proved that to be harder to do as he now sat in a cave of the dead.
+
+Or not, Peizhi noticed the youngest of the three girls still had a faint breath. It was weakening by the second but she was still alive.
+
+'It must be because she was too young, the extraction method must not have been effective'
+
+The black fading fully from his eyes, Peizhi put aside the energy for now and walked towards the kid.
+
+Walking past her elder apprentince sisters, he stood above the youngest. No matter what, having so much vitality extracted would certainly be fatal, he knew that there was nothing he could do but he decided to aproach her non-the-less.
+
+"I've already killed that demonic cultivator." 
+
+Their was no response, instead the eyes that held a faint life dimmed even more and breathing became shallower.
+
+Peizhi gave his beared a few thoughtful strokes. He squinted before speaking further, "I'll be using this energy for my own gains. Unfortunately, your group was caught up in my plans... I was unable to bring these things out of the city myself. Had I done so, I would be killed, just like you, but for reasons that no longer matter. These are just an explanation, I don't ask for any forgiveness."
+
+He could hear several slow exhales before the breathing had abruptly stopped all-togethor, the fear she felt earlier, the desperation of wanting to save her elder sisters, none of it mattered to her now. 
+
+Peizhi squatted down to her level and spoke with conviction, "Maybe, if there is a next life, you should seek to be the one in control. That person, has always been called the strongest. That is the only way the weak can live in this world."
+
+wether or not she heard it, no one can say for sure but Peizhi felt that it still needed to be said.
+
+Qin Peizhi stood up and walked back towards the fading light. As he walked, his mind was clouded with many thoughts. In all honesty, the path he took, he was not sure of it. What kind of power did he seek, what was his goal in life and how did he want to accomplish those task. As he thought about these things, he stared at the ball of light in front of him. It grew dimmer and smaller with each passing second. With nothing making a sound in the cave, there was an absolute silence as he became lost in his thoughts. For a time, Aside from the glowing light, there was nothing. Peizhi seemed to be stuck at an impasse.
+
+"The...strongest...huh..."
+
+Words were spoken very suddenly, Peizhi felt his mind regain its clarity and immediately turned around, his heart pounding and sword drawn, however there was no signs of life behind him. Everyone on the ground was without a doubt gone for good.
+
+'maybe its for the best.'
+
+City Lord Qin shook his head once more and sheathed his weapon. Sorting his belongings, he headed straight for the stone exit. The light in the cave was left alone. It was due to fade from existence, gravitating towards the ground, a sound could still be heard,
+
+"What...wouldn't...you-do?"

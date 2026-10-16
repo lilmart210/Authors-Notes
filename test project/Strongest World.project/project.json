@@ -1,188 +1,188 @@
 {
   "formatVersion": 1,
-  "id": "66b525e325787",
+  "id": "c70aab3c3d310",
   "name": "Strongest World",
   "author": "lilmart210",
-  "created": "2026-07-28T17:03:05.475Z",
-  "modified": "2026-07-28T23:20:24.678Z",
+  "created": "2026-10-16T02:54:57.681Z",
+  "modified": "2026-10-16T02:54:57.681Z",
   "tree": [
     {
-      "id": "68fe7a180a110",
+      "id": "34c71d365cb4a",
       "kind": "group",
       "name": "Manuscript",
       "children": [
         {
-          "id": "cd6ddec6ceea5",
+          "id": "8a4bfa301403b",
           "kind": "chapter",
-          "file": "thoughts__cd6dde.md",
+          "file": "thoughts__8a4bfa.md",
           "title": "Thoughts"
         },
         {
-          "id": "1c92acd24f329",
+          "id": "ee4f95ccc8cbf",
           "kind": "chapter",
-          "file": "forced__1c92ac.md",
+          "file": "forced__ee4f95.md",
           "title": "Forced"
         },
         {
-          "id": "69b57321b0ed5",
+          "id": "0bbf4e1a2d83f",
           "kind": "chapter",
-          "file": "demise__69b573.md",
+          "file": "demise__0bbf4e.md",
           "title": "Demise"
         },
         {
-          "id": "27fdf0d85608e",
+          "id": "c2e0a90aa3898",
           "kind": "chapter",
-          "file": "awareness__27fdf0.md",
+          "file": "awareness__c2e0a9.md",
           "title": "Awareness"
         },
         {
-          "id": "2efe4cbe84567",
+          "id": "0ff49924710bc",
           "kind": "chapter",
-          "file": "people__2efe4c.md",
+          "file": "people__0ff499.md",
           "title": "People"
         },
         {
-          "id": "01ebf61562078",
+          "id": "8c6f7019e5131",
           "kind": "chapter",
-          "file": "voices-of-others__01ebf6.md",
+          "file": "voices-of-others__8c6f70.md",
           "title": "Voices of Others"
         },
         {
-          "id": "e2a8142e82297",
+          "id": "5c5e31fb256ae",
           "kind": "chapter",
-          "file": "blue-mountain__e2a814.md",
+          "file": "blue-mountain__5c5e31.md",
           "title": "Blue Mountain"
         },
         {
-          "id": "5e2b19e608ec1",
+          "id": "d0e966b48407f",
           "kind": "chapter",
-          "file": "desertification__5e2b19.md",
+          "file": "desertification__d0e966.md",
           "title": "Desertification"
         },
         {
-          "id": "0c7eef5a347b1",
+          "id": "47d7eb7dbb206",
           "kind": "chapter",
-          "file": "red-demon__0c7eef.md",
+          "file": "red-demon__47d7eb.md",
           "title": "Red Demon"
         },
         {
-          "id": "d98118ee28c20",
+          "id": "5d4a361e11a4a",
           "kind": "chapter",
-          "file": "waiting__d98118.md",
+          "file": "waiting__5d4a36.md",
           "title": "waiting"
         },
         {
-          "id": "1041eb363626a",
+          "id": "916d1015241a6",
           "kind": "chapter",
-          "file": "jin-family-city__1041eb.md",
+          "file": "jin-family-city__916d10.md",
           "title": "Jin Family City"
         },
         {
-          "id": "717daa11532ac",
+          "id": "4159a7b2fe149",
           "kind": "chapter",
-          "file": "return__717daa.md",
+          "file": "return__4159a7.md",
           "title": "Return"
         },
         {
-          "id": "a8494c0a18987",
+          "id": "f5f85990621e5",
           "kind": "chapter",
-          "file": "test__a8494c.md",
+          "file": "test__f5f859.md",
           "title": "Test"
         },
         {
-          "id": "2a7d69cfcbe84",
+          "id": "e6e1dec0f2501",
           "kind": "chapter",
-          "file": "worries__2a7d69.md",
+          "file": "worries__e6e1de.md",
           "title": "Worries"
         },
         {
-          "id": "a46e805d92946",
+          "id": "8d935eef5b209",
           "kind": "chapter",
-          "file": "signs__a46e80.md",
+          "file": "signs__8d935e.md",
           "title": "Signs"
         },
         {
-          "id": "d917855d777ce",
+          "id": "41f7d451c96e1",
           "kind": "chapter",
-          "file": "formation__d91785.md",
+          "file": "formation__41f7d4.md",
           "title": "Formation"
         },
         {
-          "id": "2d17e6caeb9c8",
+          "id": "71ff3abf656b9",
           "kind": "chapter",
-          "file": "formation__2d17e6.md",
+          "file": "formation__71ff3a.md",
           "title": "Formation"
         },
         {
-          "id": "d8dc55135e135",
+          "id": "0efc3977fd1f6",
           "kind": "chapter",
-          "file": "celebration__d8dc55.md",
+          "file": "celebration__0efc39.md",
           "title": "Celebration"
         },
         {
-          "id": "550569e690255",
+          "id": "0beb91632127b",
           "kind": "chapter",
-          "file": "troublesome-matters__550569.md",
+          "file": "troublesome-matters__0beb91.md",
           "title": "Troublesome Matters"
         },
         {
-          "id": "fa98c87f84906",
+          "id": "4452073432858",
           "kind": "chapter",
-          "file": "clarity__fa98c8.md",
+          "file": "clarity__445207.md",
           "title": "clarity"
         },
         {
-          "id": "7c68985da12bf",
+          "id": "d241f4ddead9a",
           "kind": "chapter",
-          "file": "senses__7c6898.md",
+          "file": "senses__d241f4.md",
           "title": "Senses"
         },
         {
-          "id": "4b5f462a3a7a5",
+          "id": "d955e5ff0b5fa",
           "kind": "chapter",
-          "file": "light__4b5f46.md",
+          "file": "light__d955e5.md",
           "title": "Light"
         },
         {
-          "id": "9dd9bfec7b36b",
+          "id": "9e4bc0420f96c",
           "kind": "chapter",
-          "file": "hole__9dd9bf.md",
+          "file": "hole__9e4bc0.md",
           "title": "Hole"
         },
         {
-          "id": "9bc63d8e8ae79",
+          "id": "6dbbd6c4ca6c2",
           "kind": "chapter",
-          "file": "freedom__9bc63d.md",
+          "file": "freedom__6dbbd6.md",
           "title": "Freedom"
         },
         {
-          "id": "99b7b57198d4c",
+          "id": "e97fa2e301601",
           "kind": "chapter",
-          "file": "human__99b7b5.md",
+          "file": "human__e97fa2.md",
           "title": "Human"
         },
         {
-          "id": "922fbf096da74",
+          "id": "b9280da441740",
           "kind": "chapter",
-          "file": "outer-cloud-sect-a-dead-scholar__922fbf.md",
+          "file": "outer-cloud-sect-a-dead-scholar__b9280d.md",
           "title": "Outer Cloud Sect, A dead Scholar"
         },
         {
-          "id": "5a5daef6cf3dc",
+          "id": "c65a0d9dd8831",
           "kind": "chapter",
-          "file": "beginning__5a5dae.md",
+          "file": "beginning__c65a0d.md",
           "title": "Beginning"
         },
         {
-          "id": "26f0091647192",
+          "id": "3484ee94f906d",
           "kind": "chapter",
-          "file": "unknown__26f009.md",
+          "file": "unknown__3484ee.md",
           "title": "unknown"
         },
         {
-          "id": "50afe92aabbdb",
+          "id": "3d3ae90428915",
           "kind": "chapter",
-          "file": "chapter__50afe9.md",
+          "file": "chapter__3d3ae9.md",
           "title": ""
         }
       ]

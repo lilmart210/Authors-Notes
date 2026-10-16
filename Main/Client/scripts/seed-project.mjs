@@ -9,6 +9,7 @@ import { readdir, readFile, mkdir, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import * as fmt from '../src/project/format.js'
 import * as ct from '../src/project/cardTree.js'
+import { writeBinderContent, writeDrafts, chapterDraftDir, chapterOneHistory } from './seed-binder-content.mjs'
 
 const SB = 'C:/Users/mrmar/Desktop/story board/Strongest World'
 const SOURCE_CH = `${SB}/final Revised Chapters`
@@ -52,7 +53,7 @@ async function main() {
     const number = doc.number ?? i + 1
     const arc = number <= 5 ? 'The Auction' : number <= 19 ? 'The Jin Family' : 'Lost History'
     const pov = number <= 5 ? 'Qin Peizhi' : number <= 8 ? 'Jin Meixiu' : ''
-    const meta = { id, title: doc.title, type: 'chapter', number, status: i < 4 ? 'revised' : 'draft', arc }
+    const meta = { id, title: doc.title, type: 'chapter', number, arc }
     if (pov) meta.pov = pov
     if (i === 0) {
       meta.summary = 'Qin Peizhi learns his prisoners escaped with the auction goods. He toys with his terrified manager ShouShan, then reveals he already holds the World Revealing Stone.'
@@ -62,8 +63,24 @@ async function main() {
         { title: 'The reveal', note: 'Qin already holds the Stone', done: false },
       ]
     }
-    await writeFile(join(OUT, fmt.CHAPTER_DIR, fmt.chapterFileName(doc.title, id)), fmt.stringifyDocument(meta, doc.body), 'utf8')
-    group.children.push({ id, kind: 'chapter', file: fmt.chapterFileName(doc.title, id), title: doc.title })
+    // Draft history: chapter 1 has its real one (original → reviewed → today);
+    // chapter 2 was published before its last paragraph was added (changed);
+    // chapters 3–4 are published as they stand; the rest were never published.
+    const file = fmt.chapterFileName(doc.title, id)
+    const published = '2026-07-28T12:00:00.000Z'
+    if (i === 0) meta.lastDraft = await writeDrafts(OUT, chapterDraftDir(file), await chapterOneHistory(doc.body))
+    if (i === 1) meta.lastDraft = await writeDrafts(OUT, chapterDraftDir(file), [{ date: published, text: doc.body.split(/\n\s*\n/).slice(0, -1).join('\n\n') }])
+    if (i === 2 || i === 3) meta.lastDraft = await writeDrafts(OUT, chapterDraftDir(file), [{ date: published, text: doc.body }])
+    await writeFile(join(OUT, fmt.CHAPTER_DIR, file), fmt.stringifyDocument(meta, doc.body), 'utf8')
+    group.children.push({ id, kind: 'chapter', file, title: doc.title })
+  }
+  // one planned chapter: numbered, in its arc, nothing written yet
+  {
+    const id = fmt.generateId()
+    const number = Math.max(...parsed.map((d, i) => d.number ?? i + 1)) + 1
+    const file = fmt.chapterFileName('', id)
+    await writeFile(join(OUT, fmt.CHAPTER_DIR, file), fmt.stringifyDocument({ id, title: '', type: 'chapter', number, arc: 'Lost History' }, ''), 'utf8')
+    group.children.push({ id, kind: 'chapter', file, title: '' })
   }
 
   // ---- leaf entity cards (bodies carry the real material) ----
@@ -215,9 +232,12 @@ async function main() {
     await writeFile(join(OUT, fmt.BANK_DIR, fmt.bankFileName(name)), entries.join('\n'), 'utf8')
   }
 
+  const binder = await writeBinderContent(OUT)
+
   await writeFile(join(OUT, fmt.MANIFEST_FILE), fmt.serializeManifest(manifest), 'utf8')
   console.log(`\n  ✓ seeded project at:\n    ${OUT}`)
-  console.log(`    ${group.children.length} chapters · ${LEAVES.length} entities · 2 document containers (w/ sub-pages) · ${COLLECTIONS.length} collections · ${Object.keys(banks).length} banks\n`)
+  console.log(`    ${group.children.length} chapters · ${LEAVES.length} entities · 2 document containers (w/ sub-pages) · ${COLLECTIONS.length} collections · ${Object.keys(banks).length} banks`)
+  console.log(`    Book pages · ${binder.blurbDrafts} blurb drafts · ${binder.pages} Plot / Notes pages · chapter draft history\n`)
 }
 
 main().catch((e) => { console.error(e); process.exitCode = 1 })
