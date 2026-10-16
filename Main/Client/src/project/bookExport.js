@@ -320,7 +320,7 @@ export function buildPandocSource({ format, overview, publishing, blurb = '', ch
   return `${blocks.join('\n\n').trim()}\n`
 }
 
-// Arguments for the Pandoc sidecar. Paths are absolute.
+// Arguments for Pandoc. Paths are absolute.
 export function pandocArgs({ format, input, output, css, cover, options }) {
   const to = format === 'epub' ? 'epub3' : format === 'docx' ? 'docx' : 'html5'
   const args = ['-f', 'markdown', '-t', to]

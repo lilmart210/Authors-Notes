@@ -60,6 +60,23 @@ const TAURI_MOCK = String.raw`
   window.addEventListener('unhandledrejection', (e) => E2E.console.push('unhandled: ' + ((e.reason && e.reason.message) || e.reason)))
   const fail = (msg) => { E2E.errors.push(msg); throw new Error(msg) }
   function emit(event, payload) { for (const id of listeners.get(event) || []) callbacks.get(id)?.({ event, id, payload }) }
+  // App-wide AI and component state on the Rust side. Model files live in their own
+  // map (the models folder isn't part of the project). Pandoc counts as installed.
+  const ai = E2E.ai = {
+    settings: {}, defaultDir: '/appdata/models', models: new Map(), unreadable: new Set(),
+    components: { pandoc: true, engine: false }, downloadMs: 300, replyMs: 30,
+    suggestion: ' and the night went quiet. Then more.', cancel: new Set(),
+    downloaded: [], started: [], requests: [], cancelled: [], stopped: [],
+  }
+  // A download that reports progress over downloadMs, honouring download_cancel.
+  async function fakeDownload(id, total) {
+    const steps = 6
+    for (let i = 1; i <= steps; i++) {
+      await new Promise((r) => setTimeout(r, ai.downloadMs / steps))
+      if (ai.cancel.has(id)) { ai.cancel.delete(id); throw 'cancelled' }
+      emit('download-progress', { id, received: Math.round((total * i) / steps), total })
+    }
+  }
   async function invoke(cmd, args = {}, options) {
     switch (cmd) {
       case 'plugin:fs|read_text_file': { const p = norm(args.path); if (!files.has(p)) fail('ENOENT ' + p); return enc.encode(files.get(p)).buffer }
@@ -109,15 +126,57 @@ const TAURI_MOCK = String.raw`
       case 'plugin:window|destroy': E2E.destroyed = true; return null
       // Pandoc stand-in: records the call; "-o file" writes a placeholder, otherwise
       // the input comes back as rough HTML. Set E2E.pandocFail to make it fail.
-      case 'plugin:shell|execute': {
-        E2E.shell.push({ program: args.program, args: args.args })
-        if (E2E.pandocFail) return { code: 1, signal: null, stdout: '', stderr: E2E.pandocFail }
+      case 'pandoc_run': {
+        E2E.shell.push({ args: args.args })
+        if (!ai.components.pandoc) fail('pandoc not installed')
+        if (E2E.pandocFail) return { code: 1, stdout: '', stderr: E2E.pandocFail }
         const list = args.args || [], out = list.indexOf('-o')
-        if (out >= 0) { const p = norm(list[out + 1]); files.set(p, 'pandoc:' + list[list.indexOf('-t') + 1]); addParents(p); return { code: 0, signal: null, stdout: '', stderr: '' } }
+        if (out >= 0) { const p = norm(list[out + 1]); files.set(p, 'pandoc:' + list[list.indexOf('-t') + 1]); addParents(p); return { code: 0, stdout: '', stderr: '' } }
         const source = files.get(norm(list[list.length - 1])) || ''
         const html = source.split(/\n\s*\n/).map((b) => b.startsWith('# ') ? '<h1>' + b.slice(2) + '</h1>' : '<p>' + b + '</p>').join('\n')
-        return { code: 0, signal: null, stdout: html, stderr: '' }
+        return { code: 0, stdout: html, stderr: '' }
       }
+      // --- the Rust side's settings, downloads, components and model servers (src-tauri/src) ---
+      case 'settings_get': return JSON.parse(JSON.stringify(ai.settings))
+      case 'settings_set': ai.settings = JSON.parse(JSON.stringify(args.settings)); return null
+      case 'models_default_dir': return ai.defaultDir
+      case 'models_list': {
+        const dir = norm(args.dir)
+        if (ai.unreadable.has(dir)) throw 'Couldn\'t read ' + dir
+        return [...ai.models].filter(([p]) => p.startsWith(dir + '/')).map(([p, bytes]) => ({ file: p.slice(dir.length + 1), path: p, bytes }))
+      }
+      case 'models_remove': ai.models.delete(norm(args.dir) + '/' + args.file); return null
+      case 'model_download': {
+        await fakeDownload(args.id, args.bytes)
+        const p = norm(args.dir) + '/' + args.file
+        ai.models.set(p, args.bytes)
+        ai.downloaded.push(args)
+        return p
+      }
+      case 'download_cancel': ai.cancel.add(args.id); return null
+      case 'component_status': return { installed: !!ai.components[args.name], version: 'test', bytes: 1000 }
+      case 'component_install': {
+        if (ai.components[args.name]) return null
+        await fakeDownload(args.name, 1000)
+        ai.components[args.name] = true
+        return null
+      }
+      case 'llm_start': {
+        if (!ai.components.engine) throw 'The AI engine isn\'t installed'
+        ai.started.push(args)
+        return 5555
+      }
+      case 'llm_request': {
+        ai.requests.push({ path: args.path, body: args.body })
+        await new Promise((r) => setTimeout(r, ai.replyMs))
+        if (ai.cancelled.includes(args.requestId)) return null
+        const reply = args.path === '/completion' ? { content: ai.suggestion } : { choices: [{ delta: { content: ai.suggestion } }] }
+        callbacks.get(args.onEvent.id)?.({ message: reply, index: 0 })
+        callbacks.get(args.onEvent.id)?.({ end: true, index: 1 })
+        return null
+      }
+      case 'llm_cancel': ai.cancelled.push(args.requestId); return null
+      case 'llm_stop': ai.stopped.push(args.model); return null
       default: return null
     }
   }

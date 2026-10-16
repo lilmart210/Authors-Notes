@@ -14,16 +14,20 @@ import ImportWizard from './ImportWizard.jsx'
 import Explorer from './Explorer.jsx'
 import DraftsPane from './DraftsPane.jsx'
 import DiffView from './DiffView.jsx'
-import ToastHost from './Toast.jsx'
+import ToastHost, { showToast } from './Toast.jsx'
 import ScrapsView from './ScrapsView.jsx'
 import { revealScrap } from './scrapsExtension.js'
 import { OverviewPage, BookTextPage, PublishingPage, ArcPageView, BookGlance } from './BookPages.jsx'
 import { avatarColor, avatarInitial } from './avatar.js'
 import { stripGeneratorMarkers, chapterLabel, SECTION_ROOT } from '../project/format.js'
 import ExportDialog from './ExportDialog.jsx'
+import AiModelsDialog from './AiModelsDialog.jsx'
+import { Downloads, downloadPercent, COMPONENT_NAMES } from '../project/components.js'
+import { modelForId } from '../ai/catalog.js'
+import { loadAi, modelFor, suggestContinuation, warmUp } from '../ai/aiStore.js'
 import { togglePane } from './Reveal.jsx'
 import {
-  FilesIcon, SearchIcon, UsersIcon, DatabaseIcon, SparkleIcon, SettingsIcon, PageIcon, ScrollIcon,
+  FilesIcon, SearchIcon, UsersIcon, DatabaseIcon, BotIcon, SettingsIcon, PageIcon, ScrollIcon,
   ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, CheckCircleIcon,
   PlusIcon, MinusIcon, PanelRightIcon, LockIcon, OpenIcon,
 } from './icons.jsx'
@@ -49,6 +53,20 @@ export default function Shell() {
   function DocTabButton() {
     const { Tab } = useTab()
     return <span classList={{ 'tab-preview': Tab.preview }}>{Tab.Name || 'Untitled'}</span>
+  }
+
+  // Autocomplete in chapters, when a model is set for it. A failure is shown once.
+  let LastAiError = ''
+  const chapterAutocomplete = {
+    suggest: suggestContinuation,
+    isEnabled: () => Boolean(modelFor('complete')),
+    warmUp: () => warmUp('complete'),
+    onError: (err) => {
+      const message = String(err?.message || err)
+      if (message === LastAiError) return
+      LastAiError = message
+      showToast(`Autocomplete: ${message}`)
+    },
   }
 
   // A chapter editor bound to its file's SHARED Y.Doc — two views of the same
@@ -88,6 +106,7 @@ export default function Shell() {
           previewFor={PreviewFor}
           scraps={info()?.meta?.scraps || []}
           onScrapsChange={(list) => UpdateChapterMeta(props.docId, 'scraps', list)}
+          autocomplete={chapterAutocomplete}
           ref={SetView}
         />
       </Show>
@@ -142,6 +161,7 @@ export default function Shell() {
   const [Menu, SetMenu] = createSignal(null) // 'file' | 'view' | null
   const [RecentOpen, SetRecentOpen] = createSignal(false)
   const [ExportOpen, SetExportOpen] = createSignal(false)
+  const [AiOpen, SetAiOpen] = createSignal(false)
   const [PreviewOpen, SetPreviewOpen] = createSignal(false)
   const [PreviewHtml, SetPreviewHtml] = createSignal('')
   const [PreviewError, SetPreviewError] = createSignal(null)
@@ -170,6 +190,7 @@ export default function Shell() {
   // with the error in the status bar; closing a second time quits anyway.
   let CloseBlocked = false
   onMount(() => {
+    loadAi().catch((err) => console.error(err))
     const unlisten = appWindow.onCloseRequested(async (event) => {
       const saved = await FlushEverything()
       if (!saved && !CloseBlocked) {
@@ -200,6 +221,7 @@ export default function Shell() {
     document.documentElement.setAttribute('data-theme', name)
   }
   const toggleMenu = (name) => SetMenu((current) => (current === name ? null : name))
+  const downloadName = (id) => COMPONENT_NAMES[id] || modelForId(id)?.name || id
   const runMenu = (action) => { SetMenu(null); action() }
   const aliasForms = (entity) => (entity.meta.aliases || []).map((a) => (typeof a === 'object' ? a.form : a))
   const openAssign = (text) => { SetAssignText(text); SetAssignQuery(''); SetAssignOpen(true) }
@@ -360,7 +382,14 @@ export default function Shell() {
                 </div>
               </Show>
             </div>
-            <button disabled>Tools</button>
+            <div class="menuitem">
+              <button classList={{ hot: Menu() === 'tools' }} onClick={() => toggleMenu('tools')}>Tools</button>
+              <Show when={Menu() === 'tools'}>
+                <div class="filemenu">
+                  <button onClick={() => runMenu(() => SetAiOpen(true))}>AI models…</button>
+                </div>
+              </Show>
+            </div>
             <button disabled>Help</button>
           </div>
         </div>
@@ -453,7 +482,7 @@ export default function Shell() {
           <button class="ri" classList={{ on: LeftView() === 'explorer' && SidebarOpen() }} title="Explorer" onClick={() => selectView('explorer')}><FilesIcon /></button>
           <button class="ri" classList={{ on: LeftView() === 'cast' && SidebarOpen() }} title="Cast — characters & entities" onClick={() => selectView('cast')}><UsersIcon /></button>
           <button class="ri" classList={{ on: LeftView() === 'banks' && SidebarOpen() }} title="Data banks" onClick={() => selectView('banks')}><DatabaseIcon /></button>
-          <button class="ri" title="AI add-ons"><SparkleIcon /></button>
+          <button class="ri" classList={{ on: AiOpen() }} title="AI models" onClick={() => SetAiOpen(true)}><BotIcon /></button>
           <div class="spacer"></div>
           <button class="ri" title="Preferences"><SettingsIcon /></button>
         </nav>
@@ -657,6 +686,9 @@ export default function Shell() {
           <span class="s hl">POV: {CurrentDoc.meta.pov}</span>
         </Show>
         <span class="sp"></span>
+        <For each={Object.keys(Downloads())}>
+          {(id) => <span class="s mono">Downloading {downloadName(id)} · {Math.floor(downloadPercent(id))}%</span>}
+        </For>
         <Show when={CurrentDoc.id && isChapter()}>
           <span class="s mono">{wordCount().toLocaleString()} words</span>
         </Show>
@@ -691,6 +723,9 @@ export default function Shell() {
 
       <Show when={ExportOpen()}>
         <ExportDialog onClose={() => SetExportOpen(false)} />
+      </Show>
+      <Show when={AiOpen()}>
+        <AiModelsDialog onClose={() => SetAiOpen(false)} />
       </Show>
 
       <Show when={PreviewOpen()}>

@@ -17,6 +17,7 @@ import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import { proseMarkings, selectionToolbar } from './marking.js'
 import { createYjsBinding } from './yjsBinding.js'
 import { scrapsExtension, restoreScrap, dismissScrap, revealScrap, addScrapBack } from './scrapsExtension.js'
+import { ghostText } from './ghostText.js'
 import { scrapContext, serializeScraps } from '../project/scraps.js'
 import { displayDate } from '../project/drafts.js'
 import { ScissorsIcon } from './icons.jsx'
@@ -116,6 +117,7 @@ const PROSE_THEME = EditorView.theme({
  * @param {object[]} [props.scraps]                 chapter scraps — enables Scrap/Rewrite and the margin cards
  * @param {(list: object[]) => void} [props.onScrapsChange] save the scraps (debounced)
  * @param {string} [props.focusScrapId]              select a scrap's text once the editor opens
+ * @param {object} [props.autocomplete]              { suggest, isEnabled, warmUp, onError } — faded suggestions, Tab accepts
  */
 export default function Editor(props) {
   // 1. Refs
@@ -164,6 +166,7 @@ export default function Editor(props) {
       PROSE_THEME,
       ...(YjsBindingRef ? YjsBindingRef.extensions : []),
       ...(hasScraps() ? scrapsExtension({ initial: props.scraps, onChange: handleScrapsChange, onLayout: handleScrapLayout }) : []),
+      ...(props.autocomplete ? ghostText(props.autocomplete) : []),
       EditorView.updateListener.of((update) => {
         if (!update.docChanged) return
         if (Scraps().length) SetDocTick((tick) => tick + 1)

@@ -7,6 +7,7 @@ import {
 } from '../project/bookExport.js'
 import { CheckIcon } from './icons.jsx'
 import { showToast } from './Toast.jsx'
+import { componentStatus, Downloads, downloadPercent } from '../project/components.js'
 import './BookPages.css'
 import './ExportDialog.css'
 
@@ -40,10 +41,12 @@ export default function ExportDialog(props) {
   const [Options, SetOptions] = createSignal(REMEMBERED())
   const [Busy, SetBusy] = createSignal(false)
   const [Failure, SetFailure] = createSignal('')
+  const [PandocReady, SetPandocReady] = createSignal(true)
 
   // 3. onMount
   onMount(() => {
     LoadPublishedTexts().catch((err) => console.error(err))
+    componentStatus('pandoc').then((status) => SetPandocReady(status.installed), () => {})
     window.addEventListener('keydown', handleKeyDown)
   })
   onCleanup(() => window.removeEventListener('keydown', handleKeyDown))
@@ -62,6 +65,7 @@ export default function ExportDialog(props) {
     SetFailure('')
     try {
       const result = await ExportBook(Options())
+      if (isBook()) SetPandocReady(true)
       props.onClose()
       if (result.printHtml) printDocument(result.printHtml)
       showToast(result.count != null ? `Exported ${result.count} chapter files to ${result.path}` : `Exported ${result.path}`)
@@ -83,7 +87,10 @@ export default function ExportDialog(props) {
   const publishing = () => Book.publishing.meta
   const first = () => plan().chapters[0]
   const firstPara = () => (first() ? firstParagraph(first().text) : '')
-  const checks = () => metadataChecks(fmt(), { overview: overview(), publishing: publishing(), blurb: Book.blurb.body, hasCover: Boolean(overview().cover) })
+  const checks = () => {
+    const list = metadataChecks(fmt(), { overview: overview(), publishing: publishing(), blurb: Book.blurb.body, hasCover: Boolean(overview().cover) })
+    return isBook() ? [...list, { label: 'Pandoc', ok: PandocReady(), hint: 'downloads on first export (41 MB)' }] : list
+  }
   const pageRatio = () => (fmt() === 'pdf' ? trimSize(applied().trim).width / trimSize(applied().trim).height : fmt() === 'docx' ? 8.5 / 11 : 0.66)
   const pageStyle = () => ({ 'aspect-ratio': String(pageRatio()) })
   const isbn = () => (fmt() === 'pdf' ? publishing().isbnP : publishing().isbnE)
@@ -230,7 +237,7 @@ export default function ExportDialog(props) {
           </div>
         </div>
         <div class="modal-foot">
-          <Show when={Failure()} fallback={<span class="counts left">{footLine()}</span>}>
+          <Show when={Failure()} fallback={<span class="counts left">{Downloads().pandoc ? `Downloading Pandoc · ${Math.floor(downloadPercent('pandoc'))}%` : footLine()}</span>}>
             <span class="xfail left" role="alert">{Failure()}</span>
           </Show>
           <button class="modal-cancel" disabled={Busy()} onClick={() => props.onClose()}>Cancel</button>

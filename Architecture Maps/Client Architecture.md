@@ -65,7 +65,8 @@ Main/Client/src/
                      chapterLabel/FILE_DELIM/parseGeneratedFileName; generator-token grammar; import parsing)
     fsTauri.js       Tauri fs adapter (atomic writes w/ unique temp names, copyFile)
     service.js       open/create/import projects; load/save chapters, entities, banks; deleteChapter;
-                     exportBook/exportViaPandoc/renderMarkdownToHtml; entity media (addEntityMedia/entityMediaUrl); index loaders
+                     writeExport/exportWithPandoc/renderMarkdownToHtml; entity media (addEntityMedia/entityMediaUrl); index loaders
+    components.js    optional programs downloaded on first use (Pandoc, AI engine) + every download's progress
     mentions.js      pure mention index (word-bounded, alias-aware) + buildMentionMatcher + surfaceForms (linter)
     bookExport.js    pure profile-based export (web-serial/markdown/plain + pandoc docx/epub/html); strips %comments + markers
     docSync.js       shared Y.Doc registry (ref-counted, debounced persist, flushAll) + local awareness channel
@@ -84,8 +85,17 @@ Main/Client/src/
     ImportWizard.jsx the import review flow (per-chapter number+title, duplicate detection)
     icons.jsx        the Lucide icon set;  avatar.js  deterministic entity avatars
   index.css          the design system (ported from Architecture Maps/UI Artifacts) + all component classes
-  scripts/           headless verifiers: import-test.mjs, mentions-test.mjs, seed-project.mjs
-  src-tauri/         Rust host: fs+dialog+shell plugins; bundle.externalBin pandoc sidecar; assetProtocol for media
+  ai/
+    catalog.js       the model list (Hugging Face GGUF files with sizes + SHA-256), tags, jobs
+    aiStore.js       app-wide AI state: models folder, downloaded models, Use for, requests to a running model
+    prose.js         pure text helpers (autocomplete suggestion tidying)
+  components/AiModelsDialog.jsx  Tools → AI models;  components/ghostText.js  autocomplete (faded text, Tab accepts)
+  scripts/           headless verifiers (unit tests + e2e-*-test.mjs over scripts/e2e-harness.mjs), seed-project.mjs
+  src-tauri/src/     Rust host: fs+dialog+shell plugins, assetProtocol for media, and
+    download.rs      resumable downloads, progress events, SHA-256 check
+    models.rs        settings.json (app config dir) + the models folder: list / download / remove GGUF files
+    components.rs    pinned Pandoc + llama.cpp engine: download, unpack to app local data, run Pandoc
+    llm.rs           one llama-server per model on a free localhost port; requests stream back over a Channel
 ```
 
 Storage on disk (a project): `project.json` + `chapters/<slug>__<id>.md` (frontmatter) +
@@ -101,21 +111,34 @@ human hint; identity is always the frontmatter `id`; order is the manifest. Old
 `NNNN-slug.md` files still load fine (filename is non-authoritative). Display label:
 `format.chapterLabel(number, title)` → "Chapter 3.5 · Ghost Town".
 
-## Export (Pandoc sidecar)
+## Export and Pandoc (downloaded on first use)
 
-- **Native profiles** (Web serial / Markdown / Plain) are pure JS
-  (`src/project/bookExport.js`) — always work, no binary.
-- **Pandoc profiles** (DOCX / EPUB / HTML) shell out via the Tauri **shell plugin**
-  to a bundled **Pandoc sidecar**. Wiring: `Cargo.toml` `tauri-plugin-shell`;
-  `lib.rs` `.plugin(tauri_plugin_shell::init())`; `tauri.conf.json`
-  `bundle.externalBin: ["binaries/pandoc"]`; capability `shell:allow-execute`
-  scoped to `binaries/pandoc` (sidecar, args). `service.exportViaPandoc` runs
-  `Command.sidecar('binaries/pandoc', ['-f','markdown','-t',<fmt>,'-o',out,in])`.
-- **Manual step:** drop the Pandoc binary at
-  `src-tauri/binaries/pandoc-<target-triple>[.exe]` (see that folder's README).
-- **⚠ Caveat:** `externalBin` makes `tauri dev`/`build` **require** that binary —
-  until it's placed, the Tauri build errors ("external binary not found"). The
-  frontend `npm run build` is unaffected.
+- **Web serial and Markdown** are pure JS (`src/project/bookExport.js`) and always work.
+- **EPUB, Word and Print PDF** run Pandoc. Pandoc is **not bundled** (it was a 231 MB
+  sidecar): `src-tauri/src/components.rs` pins its release zip (version, URL, size,
+  SHA-256); the first export downloads it, checks the hash, and unpacks `pandoc.exe` into
+  `<app local data>/components/pandoc/<version>/`. `service.runPandoc` calls
+  `ensureComponent('pandoc')` then the `pandoc_run` command.
+- The URLs point at GitHub releases until the author's server can host them; changing
+  them in `components.rs` is the only step. No binary is needed to build the app.
+
+## Local AI
+
+- **Engine:** llama.cpp's `llama-server`, a pinned Windows Vulkan build (runs on NVIDIA,
+  AMD and Intel GPUs, falls back to the CPU), downloaded with the first model like Pandoc.
+- **Models folder:** one app-wide setting (`settings.json` in the app config dir), default
+  `<app local data>/models`, can point at a NAS share. Every `.gguf` there (one level of
+  subfolders too) is listed, including files copied in by hand.
+- **Servers:** `llm_start(model, ctx)` starts one `llama-server` per model on a free
+  localhost port with `--load-mode none` (reads the model into memory, safe over a network
+  share) and `--fit on`; a second caller while it loads waits for it; all are stopped on
+  app exit. Logs go to the app log dir (`llama-server-<port>.log`).
+- **Requests** go through Rust (`llm_request`), never straight from the page, and stream
+  back over a Tauri Channel; `llm_cancel` drops the connection, which stops generation.
+- **Autocomplete** (`components/ghostText.js`): after a 650 ms pause at the end of a line,
+  the last ~2,500 characters go to the autocomplete model's `/completion`; the reply is
+  trimmed to one sentence (`ai/prose.js`) and shown faded at the cursor. Tab accepts,
+  Esc / typing / moving drops it.
 
 ## Documents, tabs & live editing (current, 2026-07)
 

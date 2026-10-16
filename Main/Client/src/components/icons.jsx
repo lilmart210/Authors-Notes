@@ -231,3 +231,7 @@ export const DownloadIcon = (props) => base(props, <path d="M12 3v12M7 10l5 5 5-
 export const StarIcon = (props) => base(props, <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />)
 export const XIcon = (props) => base(props, <path d="M18 6 6 18M6 6l12 12" />)
 export const CheckIcon = (props) => base(props, <path d="M5 13l4 4L19 7" />)
+
+// Robot head — the AI models rail button.
+export const BotIcon = (props) =>
+  base(props, <><rect x="5" y="7" width="14" height="12" rx="3" /><path d="M12 7V3.5M9 12h.01M15 12h.01M9.5 16h5M2.5 12H5M19 12h2.5" /></>)

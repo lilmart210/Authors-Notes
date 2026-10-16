@@ -3,14 +3,14 @@
 // Framework-agnostic async functions over the fs adapter + the pure format
 // module. The Solid store wraps these; nothing here touches UI.
 
-import { Command } from '@tauri-apps/plugin-shell'
-import { convertFileSrc } from '@tauri-apps/api/core'
+import { convertFileSrc, invoke } from '@tauri-apps/api/core'
 import * as format from './format.js'
 import * as fs from './fsTauri.js'
 import * as cardTree from './cardTree.js'
 import * as book from './book.js'
 import * as drafts from './drafts.js'
 import * as bookExport from './bookExport.js'
+import { ensureComponent } from './components.js'
 
 // Adapter that lets the pure card-tree walker use the Tauri fs.
 const fsAdapter = { join: fs.joinPath, listDir: fs.listDir, readText: fs.readText, exists: fs.pathExists }
@@ -336,18 +336,15 @@ export async function writeSerialExport(projectDir, files) {
   return joinPath(EXPORT_DIR, 'serial')
 }
 
+// Pandoc downloads on first use (src-tauri/src/components.rs), then runs from there.
 async function runPandoc(args) {
-  let result
-  try {
-    result = await Command.sidecar('binaries/pandoc', args).execute()
-  } catch (err) {
-    throw new Error(`Pandoc couldn't start: ${err?.message || err}`)
-  }
+  await ensureComponent('pandoc')
+  const result = await invoke('pandoc_run', { args })
   if (result.code !== 0) throw new Error(`Pandoc: ${String(result.stderr || '').trim() || `exited ${result.code}`}`)
   return result
 }
 
-// A book format through the bundled Pandoc sidecar. EPUB and Word are written
+// A book format through Pandoc. EPUB and Word are written
 // to exports/<outName>; for the print PDF the HTML comes back to be laid out.
 //   coverRel: the cover image, relative to the project ('' for none)
 export async function exportWithPandoc(projectDir, { format: target, markdown, outName, coverRel, options }) {
@@ -368,16 +365,13 @@ export async function exportWithPandoc(projectDir, { format: target, markdown, o
 }
 
 // Render markdown to an HTML fragment via Pandoc (stdout) for the in-app
-// typeset preview. Same sidecar, no output file.
+// typeset preview. No output file.
 export async function renderMarkdownToHtml(projectDir, markdown) {
   const dir = joinPath(projectDir, 'exports')
   await fs.ensureDir(dir)
   const inputPath = joinPath(dir, '.preview.md')
   await fs.writeTextAtomic(inputPath, markdown)
-  const command = Command.sidecar('binaries/pandoc', ['-f', 'markdown', '-t', 'html', inputPath])
-  const result = await command.execute()
-  if (result.code !== 0) throw new Error(`pandoc exited ${result.code}: ${result.stderr || 'unknown error'}`)
-  return result.stdout
+  return (await runPandoc(['-f', 'markdown', '-t', 'html', inputPath])).stdout
 }
 
 // --- Entity media (media/<entityId>/*) ---

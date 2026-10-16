@@ -339,3 +339,6 @@
   .scrap.open { z-index: 6; }
   .scrap.open .scrap-body { display: block; position: absolute; left: 32px; top: 0; width: 240px; background: var(--chrome); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; box-shadow: var(--shadow); }
 }
+
+/* autocomplete suggestion (ghostText.js) — Tab accepts */
+.cm-ghost{ color:var(--faint); pointer-events:none; }

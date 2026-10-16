@@ -1,0 +1,4 @@
+
+# Pandoc and the AI engine download on first use; nothing is bundled here
+Main/Client/src-tauri/binaries/*
+!Main/Client/src-tauri/binaries/README.md

@@ -175,10 +175,11 @@ File → Export… or **Export book…** on Publishing. Choices are organized by
   downloaded to and loaded from, not per project. It can point at a NAS share or mapped
   drive so models don't take local disk space. Model files the user copied there by hand
   show up too.
-- Runtime, recommended and **pending the author's decision:** llama.cpp `llama-server` as a
-  sidecar process (no Python). It runs GGUF models from Hugging Face out of the models
-  folder, checked by hash, over localhost OpenAI-style HTTP with streaming. (Pandoc, by
-  contrast, ships inside the installer.) A Python process over WebSocket was rejected as too heavy;
+- **Runtime (author approved, 2026-10-16):** llama.cpp `llama-server`, downloaded with the
+  first model (no Python, nothing bundled). It runs GGUF models from Hugging Face out of
+  the models folder, checked by hash, over localhost OpenAI-style HTTP with streaming.
+  Pandoc moved to the same download-on-first-use path. Details in
+  [Client Architecture](./Client%20Architecture.md#local-ai). A Python process over WebSocket was rejected as too heavy;
   transformers.js / WebGPU is a fallback for tiny models only.
 - "The AI can do whatever the user can do" requires turning `ProjectContext` actions into
   **one command registry** used by both the UI and the AI, with confirm and undo.
@@ -200,7 +201,10 @@ and committed:
 | Export dialog by destination | Built (gaps listed under Export) |
 | Outline with draft states | Built |
 | Seeded test project (Book, Plot, Notes, draft history) | Built — `scripts/seed-project.mjs` |
-| AI: command registry → model manager and downloads → autocomplete → assistant tools | **Waiting on the author's runtime decision** |
+| AI models window, models folder, downloads (resume, hash check), engine | Built |
+| Autocomplete (faded suggestion, Tab accepts) | Built |
+| Pandoc downloaded on first use instead of bundled | Built |
+| AI assistant: command registry + chat with tools | Next — needs a UI prototype first |
 
 Known limitations:
 

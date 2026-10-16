@@ -30,12 +30,6 @@
         { "path": "$DESKTOP/**" },
         { "path": "$DOCUMENT/**" }
       ]
-    },
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        { "name": "binaries/pandoc", "sidecar": true, "args": true }
-      ]
     }
   ]
 }

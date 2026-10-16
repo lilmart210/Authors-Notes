@@ -26,3 +26,9 @@ tauri-plugin-log = "2"
 tauri-plugin-fs = "2.5.1"
 tauri-plugin-dialog = "2.7.2"
 tauri-plugin-shell = "2"
+# downloads (Windows TLS, no extra build tools), hashing, unpacking, model servers
+reqwest = { version = "0.13", default-features = false, features = ["native-tls", "http2", "stream", "json"] }
+futures-util = "0.3"
+sha2 = "0.10"
+tokio = { version = "1", features = ["fs", "io-util", "time"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2-zlib-rs"] }
