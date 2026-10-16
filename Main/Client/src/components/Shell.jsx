@@ -20,7 +20,7 @@ import { revealScrap } from './scrapsExtension.js'
 import { OverviewPage, BookTextPage, PublishingPage, ArcPageView, BookGlance } from './BookPages.jsx'
 import { avatarColor, avatarInitial } from './avatar.js'
 import { stripGeneratorMarkers, chapterLabel, SECTION_ROOT } from '../project/format.js'
-import { EXPORT_PROFILES } from '../project/bookExport.js'
+import ExportDialog from './ExportDialog.jsx'
 import {
   FilesIcon, SearchIcon, UsersIcon, DatabaseIcon, SparkleIcon, SettingsIcon, PageIcon, ScrollIcon,
   ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, CheckCircleIcon,
@@ -41,7 +41,7 @@ export default function Shell() {
     CastForChapter, ChapterById, UpdateChapterMeta, SearchProject, TimelineChapters, CreateEntity,
     AddAliasToEntity, ResolveMention, PreviewFor, Book, ArcNames, PendingScrapFocus, ClearScrapFocus,
     acquireChapterDoc, releaseChapterDoc, PromoteDocTab,
-    ExportBook, RenderPreview, SetContainerApi, HandleContainerChange,
+    RenderPreview, SetContainerApi, HandleContainerChange,
   } = useProject()
 
   // Renderers for the split-container tabs (the middle section).
@@ -141,11 +141,6 @@ export default function Shell() {
   const [Menu, SetMenu] = createSignal(null) // 'file' | 'view' | null
   const [RecentOpen, SetRecentOpen] = createSignal(false)
   const [ExportOpen, SetExportOpen] = createSignal(false)
-  const [ExportProfile, SetExportProfile] = createSignal('web-serial')
-  const [ExportScope, SetExportScope] = createSignal('book')
-  const [ExportHeadings, SetExportHeadings] = createSignal(true)
-  const [ExportResult, SetExportResult] = createSignal(null)
-  const [ExportBusy, SetExportBusy] = createSignal(false)
   const [PreviewOpen, SetPreviewOpen] = createSignal(false)
   const [PreviewHtml, SetPreviewHtml] = createSignal('')
   const [PreviewError, SetPreviewError] = createSignal(null)
@@ -216,7 +211,6 @@ export default function Shell() {
   const assignToCard = (id) => { AddAliasToEntity(id, AssignText()); SetAssignOpen(false) }
   const createFromAssign = (type) => { CreateEntity(AssignText(), type); SetAssignOpen(false) }
   function openExport() {
-    SetExportResult(null)
     SetExportOpen(true)
   }
   async function openPreview() {
@@ -228,18 +222,6 @@ export default function Shell() {
     } catch (err) {
       console.error(err)
       SetPreviewError(String(err?.message || err))
-    }
-  }
-  async function runExport() {
-    SetExportBusy(true)
-    try {
-      const path = await ExportBook({ profile: ExportProfile(), scope: ExportScope(), includeChapterHeadings: ExportHeadings() })
-      SetExportResult(path ? { ok: true, path } : { ok: false })
-    } catch (err) {
-      console.error(err)
-      SetExportResult({ ok: false, message: String(err?.message || err) })
-    } finally {
-      SetExportBusy(false)
     }
   }
   const adjustPageWidth = (delta) => SetPageWidth((w) => Math.min(920, Math.max(420, w + delta)))
@@ -707,41 +689,7 @@ export default function Shell() {
       </Show>
 
       <Show when={ExportOpen()}>
-        <div class="modal-overlay" onClick={() => SetExportOpen(false)}>
-          <div class="modal" onClick={(e) => e.stopPropagation()}>
-            <div class="modal-head">Export</div>
-            <div class="modal-body export-body">
-              <div class="export-field">
-                <label>Format</label>
-                <select value={ExportProfile()} onChange={(e) => SetExportProfile(e.currentTarget.value)}>
-                  <For each={Object.entries(EXPORT_PROFILES)}>{([key, spec]) => <option value={key}>{spec.label}</option>}</For>
-                </select>
-              </div>
-              <div class="export-field">
-                <label>Scope</label>
-                <select value={ExportScope()} onChange={(e) => SetExportScope(e.currentTarget.value)}>
-                  <option value="book">Whole book</option>
-                  <option value="chapter" disabled={!isChapter()}>Current chapter</option>
-                </select>
-              </div>
-              <label class="export-check">
-                <input type="checkbox" checked={ExportHeadings()} onChange={(e) => SetExportHeadings(e.currentTarget.checked)} />
-                Include chapter headings
-              </label>
-              <Show when={ExportResult()}>
-                <div class="export-result" classList={{ bad: !ExportResult().ok }}>
-                  {ExportResult().ok
-                    ? `Exported to ${ExportResult().path}`
-                    : `Export failed${ExportResult().message ? `: ${ExportResult().message}` : ' — see console.'}`}
-                </div>
-              </Show>
-            </div>
-            <div class="modal-foot">
-              <button class="modal-cancel" onClick={() => SetExportOpen(false)}>Close</button>
-              <button class="modal-go" disabled={ExportBusy()} onClick={runExport}>{ExportBusy() ? 'Exporting…' : 'Export'}</button>
-            </div>
-          </div>
-        </div>
+        <ExportDialog onClose={() => SetExportOpen(false)} />
       </Show>
 
       <Show when={PreviewOpen()}>

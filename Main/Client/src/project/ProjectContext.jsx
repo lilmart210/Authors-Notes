@@ -8,6 +8,7 @@ import * as mentions from './mentions.js'
 import * as bookExport from './bookExport.js'
 import * as docSync from './docSync.js'
 import { createBinderApi } from './binderApi.js'
+import { createExportApi } from './exportApi.js'
 
 const AUTOSAVE_DELAY_MS = 1500
 
@@ -908,31 +909,6 @@ export function ProjectProvider(props) {
     rebuildIndex()
   }
 
-  // --- export (offline, native Markdown/text) ---
-  async function ExportBook({ profile = 'web-serial', scope = 'book', includeChapterHeadings = true } = {}) {
-    if (!Project.dir) return null
-    docSync.flushAll() // land any pending Yjs edits into ChapterBodies first
-    await flushSave() // make sure the chapter you're editing is on disk / in the index
-    let chapters
-    if (scope === 'chapter' && CurrentDoc.kind === 'chapter') {
-      chapters = [{ number: CurrentDoc.meta?.number ?? null, title: CurrentDoc.meta?.title || 'Chapter', body: CurrentDoc.body }]
-    } else {
-      chapters = ChapterBodies().map((c) => ({ number: c.number, title: c.title, body: c.body }))
-    }
-    const slug = (text) => String(text || '').replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '') || 'export'
-    const stem = scope === 'chapter' ? `${slug(Project.manifest?.name)}-${slug(CurrentDoc.meta?.title)}` : slug(Project.manifest?.name)
-
-    if (bookExport.isPandocProfile(profile)) {
-      const markdown = bookExport.buildExport(chapters, { profile: 'markdown', includeChapterHeadings })
-      const ext = bookExport.exportExtension(profile)
-      return service.exportViaPandoc(Project.dir, markdown, `${stem}-${profile}`, `${stem}-${profile}.${ext}`, bookExport.EXPORT_PROFILES[profile].pandocTo)
-    }
-
-    const content = bookExport.buildExport(chapters, { profile, includeChapterHeadings })
-    const filename = `${stem}-${profile}.${bookExport.exportExtension(profile)}`
-    return service.exportBook(Project.dir, filename, content)
-  }
-
   // Typeset preview — the current chapter (or book) rendered via Pandoc → HTML.
   async function RenderPreview({ scope = 'chapter' } = {}) {
     if (!Project.dir) return ''
@@ -944,7 +920,7 @@ export function ProjectProvider(props) {
     } else {
       chapters = ChapterBodies().map((c) => ({ number: c.number, title: c.title, body: c.body }))
     }
-    const markdown = bookExport.buildExport(chapters, { profile: 'markdown', includeChapterHeadings: true })
+    const markdown = bookExport.buildExport(chapters, { includeChapterHeadings: true })
     return service.renderMarkdownToHtml(Project.dir, markdown)
   }
 
@@ -1054,9 +1030,11 @@ export function ProjectProvider(props) {
     ChapterBodies, ChapterById, UpdateChapterMeta, ReplaceChapterBody, ArcBands,
     Cards, SetCards, reloadCards, OpenEntityById, UpdateMeta, Banks, MembersOf, OpenChapterById,
   })
+  const exporter = createExportApi({ Project, flushSave, ChapterBodies, ...binder })
 
   const projectApi = {
     ...binder,
+    ...exporter,
     Cards,
     WorldDir: format.WORLD_DIR,
     Project,
@@ -1121,7 +1099,6 @@ export function ProjectProvider(props) {
     acquireChapterDoc,
     releaseChapterDoc,
     PromoteDocTab,
-    ExportBook,
     RenderPreview,
     SaveNow: flushSave,
     SetContainerApi,

@@ -159,6 +159,8 @@ export function createBinderApi(ctx) {
   }
   const ArcPage = (name) => ArcFiles().find((a) => a.meta.name === name) || { file: format.arcFileName(name), meta: { name, plan: '' }, body: '' }
   const ArcChapters = (name) => ChapterBodies().filter((c) => (c.meta?.arc || '') === name).sort((a, b) => (a.number ?? 1e9) - (b.number ?? 1e9))
+  // Chapters as the Manuscript lists them: arc by arc, then those in no arc.
+  const ReadingOrder = () => [...ArcNames().flatMap((name) => ArcChapters(name)), ...ArcChapters('')]
 
   function saveArcNow(name) {
     const page = ArcPage(name), dir = Project.dir
@@ -461,7 +463,7 @@ export function createBinderApi(ctx) {
     // drafts
     DraftDoc, DraftList, LoadDrafts, PublishDraft, RestoreDraft, OpenDiff,
     // arcs
-    ArcNames, ArcPage, ArcChapters, PlanSummary, UpdateArc, CreateArc, RenameArc, DeleteArc, OpenArc,
+    ArcNames, ArcPage, ArcChapters, ReadingOrder, PlanSummary, UpdateArc, CreateArc, RenameArc, DeleteArc, OpenArc,
     // pages
     PagesIn, PageChildren, ColumnsOf, FieldsOf, LinkedFrom, PageNamed, RetitlePageTabs, CanGenerate, GeneratePageIn, CreatePage, AddPagesTo, RenamePage, UpdatePageMeta, DeletePage, DuplicatePage, MovePage,
     // scraps

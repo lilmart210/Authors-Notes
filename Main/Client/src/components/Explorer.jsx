@@ -24,7 +24,7 @@ export default function Explorer() {
     OpenDocument, ChapterById, AddChapter, nextChapterNumber, chapterNumberExists, UpdateChapterMeta,
     SetArcForChapters, DeleteChapters,
     Book, BookCoverUrl, OpenBookPage, PlanSummary,
-    ArcNames, ArcChapters, OpenArc, CreateArc, RenameArc, DeleteArc,
+    ArcNames, ArcChapters, ReadingOrder, OpenArc, CreateArc, RenameArc, DeleteArc,
     PagesIn, CreatePage, RenamePage, DeletePage, DuplicatePage, MovePage,
     PublishDraft, OpenDiff, LoadDrafts, DraftList, AllScraps, OpenScraps,
   } = useProject()
@@ -67,7 +67,7 @@ export default function Explorer() {
 
   // --- chapters ---
   const chapterRows = (arc) => ArcChapters(arc)
-  const chapterOrder = () => [...ArcNames().flatMap((name) => chapterRows(name)), ...chapterRows('')]
+  const chapterOrder = () => ReadingOrder()
   const chapterText = (chapter) => chapter.body || ''
   const chapterTitle = (chapter) => chapterLabel(chapter.number, chapter.meta?.title ?? chapter.title)
   const arcRange = (name) => {

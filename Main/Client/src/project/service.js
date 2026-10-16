@@ -10,6 +10,7 @@ import * as fs from './fsTauri.js'
 import * as cardTree from './cardTree.js'
 import * as book from './book.js'
 import * as drafts from './drafts.js'
+import * as bookExport from './bookExport.js'
 
 // Adapter that lets the pure card-tree walker use the Tauri fs.
 const fsAdapter = { join: fs.joinPath, listDir: fs.listDir, readText: fs.readText, exists: fs.pathExists }
@@ -240,6 +241,13 @@ export async function loadDrafts(projectDir, draftDir) {
   return list.sort((a, b) => a.n - b.n)
 }
 
+// The text of one published draft, or null when its file is missing.
+export async function loadDraftText(projectDir, draftDir, n) {
+  const path = joinPath(projectDir, draftDir, drafts.draftFileName(n))
+  if (!(await fs.pathExists(path))) return null
+  return format.parseDocument(await fs.readText(path)).body
+}
+
 export async function writeDraft(projectDir, draftDir, { n, date, note = '', text }) {
   const dir = joinPath(projectDir, draftDir)
   await fs.ensureDir(dir)
@@ -305,28 +313,58 @@ export async function importBankFromFile(projectDir, sourcePath) {
   return { file, name: file.replace(/\.csv$/i, ''), entries: format.bankEntries(raw) }
 }
 
-// Write an exported manuscript into the project's own exports/ folder (stays in
-// the fs scope — no save dialog, no extra capability). Returns the relative path.
-export async function exportBook(projectDir, filename, content) {
-  await fs.ensureDir(joinPath(projectDir, 'exports'))
-  await fs.writeTextAtomic(joinPath(projectDir, 'exports', filename), content)
-  return joinPath('exports', filename)
+// --- Export (the project's own exports/ folder: inside the fs scope, no save dialog) ---
+export const EXPORT_DIR = 'exports'
+const EXPORT_BUILD_DIR = '.build' // Pandoc's input files, exports/.build/
+
+// Write one exported file. Returns its path relative to the project.
+export async function writeExport(projectDir, filename, content) {
+  await fs.ensureDir(joinPath(projectDir, EXPORT_DIR))
+  await fs.writeTextAtomic(joinPath(projectDir, EXPORT_DIR, filename), content)
+  return joinPath(EXPORT_DIR, filename)
 }
 
-// Convert the markdown build to a rich format via the bundled Pandoc sidecar.
-// Writes both the markdown source and the output into exports/. Requires the
-// pandoc binary at src-tauri/binaries/pandoc-<target-triple>.
-export async function exportViaPandoc(projectDir, markdown, stem, outName, pandocTo) {
-  const dir = joinPath(projectDir, 'exports')
+// Web serial: one file per chapter in exports/serial/. Chapter files from an
+// earlier export are cleared first so renamed chapters don't leave strays.
+export async function writeSerialExport(projectDir, files) {
+  const dir = joinPath(projectDir, EXPORT_DIR, 'serial')
   await fs.ensureDir(dir)
-  const inputPath = joinPath(dir, `${stem}.md`)
-  const outputPath = joinPath(dir, outName)
-  await fs.writeTextAtomic(inputPath, markdown)
+  for (const entry of await fs.listDir(dir)) {
+    if (!entry.isDirectory && bookExport.SERIAL_FILE_RE.test(entry.name)) await fs.removePath(joinPath(dir, entry.name))
+  }
+  for (const file of files) await fs.writeTextAtomic(joinPath(dir, file.name), file.content)
+  return joinPath(EXPORT_DIR, 'serial')
+}
 
-  const command = Command.sidecar('binaries/pandoc', ['-f', 'markdown', '-t', pandocTo, '-o', outputPath, inputPath])
-  const result = await command.execute()
-  if (result.code !== 0) throw new Error(`pandoc exited ${result.code}: ${result.stderr || 'unknown error'}`)
-  return joinPath('exports', outName)
+async function runPandoc(args) {
+  let result
+  try {
+    result = await Command.sidecar('binaries/pandoc', args).execute()
+  } catch (err) {
+    throw new Error(`Pandoc couldn't start: ${err?.message || err}`)
+  }
+  if (result.code !== 0) throw new Error(`Pandoc: ${String(result.stderr || '').trim() || `exited ${result.code}`}`)
+  return result
+}
+
+// A book format through the bundled Pandoc sidecar. EPUB and Word are written
+// to exports/<outName>; for the print PDF the HTML comes back to be laid out.
+//   coverRel: the cover image, relative to the project ('' for none)
+export async function exportWithPandoc(projectDir, { format: target, markdown, outName, coverRel, options }) {
+  const dir = joinPath(projectDir, EXPORT_DIR)
+  const build = joinPath(dir, EXPORT_BUILD_DIR)
+  await fs.ensureDir(build)
+  const input = joinPath(build, 'book.md')
+  await fs.writeTextAtomic(input, markdown)
+  let css = ''
+  if (target === 'epub') {
+    css = joinPath(build, 'epub.css')
+    await fs.writeTextAtomic(css, bookExport.EPUB_CSS)
+  }
+  const output = target === 'pdf' ? '' : joinPath(dir, outName)
+  const cover = coverRel ? joinPath(projectDir, coverRel) : ''
+  const result = await runPandoc(bookExport.pandocArgs({ format: target, input, output, css, cover, options }))
+  return target === 'pdf' ? result.stdout : joinPath(EXPORT_DIR, outName)
 }
 
 // Render markdown to an HTML fragment via Pandoc (stdout) for the in-app

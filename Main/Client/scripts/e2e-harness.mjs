@@ -49,7 +49,7 @@ const TAURI_MOCK = String.raw`
   const enc = new TextEncoder(), dec = new TextDecoder()
   const callbacks = new Map(), listeners = new Map()
   let nextId = 1
-  const E2E = window.__E2E__ = { files, original, dirs, destroyed: false, errors: [], console: [], dialogResult: null }
+  const E2E = window.__E2E__ = { files, original, dirs, destroyed: false, errors: [], console: [], dialogResult: null, shell: [], pandocFail: null }
   const realError = console.error.bind(console)
   console.error = (...a) => { E2E.console.push(a.map((x) => (x && x.message) || String(x)).join(' ').slice(0, 300)); realError(...a) }
   window.addEventListener('error', (e) => E2E.console.push('uncaught: ' + e.message))
@@ -103,6 +103,17 @@ const TAURI_MOCK = String.raw`
       // Like Tauri: if the page listens for close-requested, closing asks the page first.
       case 'plugin:window|close': { if ((listeners.get('tauri://close-requested') || []).length) emit('tauri://close-requested', null); else E2E.destroyed = true; return null }
       case 'plugin:window|destroy': E2E.destroyed = true; return null
+      // Pandoc stand-in: records the call; "-o file" writes a placeholder, otherwise
+      // the input comes back as rough HTML. Set E2E.pandocFail to make it fail.
+      case 'plugin:shell|execute': {
+        E2E.shell.push({ program: args.program, args: args.args })
+        if (E2E.pandocFail) return { code: 1, signal: null, stdout: '', stderr: E2E.pandocFail }
+        const list = args.args || [], out = list.indexOf('-o')
+        if (out >= 0) { const p = norm(list[out + 1]); files.set(p, 'pandoc:' + list[list.indexOf('-t') + 1]); addParents(p); return { code: 0, signal: null, stdout: '', stderr: '' } }
+        const source = files.get(norm(list[list.length - 1])) || ''
+        const html = source.split(/\n\s*\n/).map((b) => b.startsWith('# ') ? '<h1>' + b.slice(2) + '</h1>' : '<p>' + b + '</p>').join('\n')
+        return { code: 0, signal: null, stdout: html, stderr: '' }
+      }
       default: return null
     }
   }

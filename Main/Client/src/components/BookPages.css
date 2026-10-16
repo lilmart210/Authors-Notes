@@ -36,6 +36,8 @@
 .chips{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .chip{ display:inline-flex; align-items:center; gap:4px; font-size:12px; padding:3px 4px 3px 10px; border-radius:999px; background:var(--bg); border:1px solid var(--border); color:var(--ink); }
 .chip.pick{ cursor:pointer; }
+.chip.toggle{ padding:3px 10px; cursor:pointer; color:var(--dim); font:inherit; font-size:12px; }
+.chip.toggle.on{ color:var(--ink); }
 .chip.pick:hover{ border-color:var(--accent); }
 .chip.on{ border-color:var(--accent); background:var(--accent-soft); }
 .chip.on svg{ color:var(--accent); }
