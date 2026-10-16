@@ -53,6 +53,7 @@ export async function loadCardTree(fs, dir) {
     return out // missing dir → empty tree, never throw
   }
   for (const entry of entries) {
+    if (entry.name.startsWith('.')) continue // hidden folders (e.g. .drafts) aren't cards
     if (entry.isDirectory) {
       const folder = fs.join(dir, entry.name)
       const indexPath = fs.join(folder, INDEX_FILE)

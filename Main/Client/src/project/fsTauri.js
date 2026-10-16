@@ -50,6 +50,11 @@ export async function removePath(path) {
   return remove(path, { recursive: true })
 }
 
+// Move a file or a whole folder (pages moved between parents keep their children).
+export async function renamePath(from, to) {
+  return rename(from, to)
+}
+
 // Copy a (binary) file, e.g. a picked image into the project's media folder.
 export async function copyBinary(source, dest) {
   return copyFile(source, dest)

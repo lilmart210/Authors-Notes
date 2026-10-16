@@ -74,6 +74,19 @@ export function docString(key) {
   return entry ? entry.ydoc.getText('document').toString() : null
 }
 
+// Replace the whole text of an open shared doc (restoring a draft). Every view
+// bound to it updates, and the normal debounced save writes it. False if not open.
+export function replaceText(key, text) {
+  const entry = registry.get(key)
+  if (!entry) return false
+  const ytext = entry.ydoc.getText('document')
+  entry.ydoc.transact(() => {
+    ytext.delete(0, ytext.length)
+    ytext.insert(0, text)
+  })
+  return true
+}
+
 // Force-flush any pending save for an open doc (e.g. before export).
 export function flushDoc(key) {
   const entry = registry.get(key)

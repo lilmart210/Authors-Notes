@@ -14,6 +14,21 @@ export const MANIFEST_FILE = 'project.json'
 export const CHAPTER_DIR = 'chapters'
 export const ENTITY_DIR = 'bible'
 export const BANK_DIR = 'banks'
+export const ARC_DIR = 'arcs'
+export const MEDIA_DIR = 'media'
+
+// Folders that hold self-describing card trees (see cardTree.js). The World is
+// the story bible (`bible/`, kept for existing projects); Plot, Notes and the
+// manuscript's front/back matter use the same page format in their own folders.
+export const WORLD_DIR = ENTITY_DIR
+export const CARD_ROOTS = [WORLD_DIR, 'plot', 'notes', 'front-matter', 'back-matter']
+export const SECTION_ROOT = { world: WORLD_DIR, plot: 'plot', notes: 'notes', front: 'front-matter', back: 'back-matter' }
+
+// Arc pages: `arcs/<slug>.md`, matched to chapters by the arc name in each
+// chapter's frontmatter (`arc:`), so a lost arc file never unassigns chapters.
+export function arcFileName(name) {
+  return `${slugify(name || 'arc')}.md`
+}
 
 // ---------------------------------------------------------------------------
 // Generator tokens — a resolved "/bank" value that stays live

@@ -8,12 +8,14 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import * as format from './format.js'
 import * as fs from './fsTauri.js'
 import * as cardTree from './cardTree.js'
+import * as book from './book.js'
+import * as drafts from './drafts.js'
 
 // Adapter that lets the pure card-tree walker use the Tauri fs.
 const fsAdapter = { join: fs.joinPath, listDir: fs.listDir, readText: fs.readText, exists: fs.pathExists }
 
 const { joinPath } = fs
-const MEDIA_DIR = 'media'
+const { MEDIA_DIR } = format
 
 function chapterPath(projectDir, file) {
   return joinPath(projectDir, format.CHAPTER_DIR, file)
@@ -90,26 +92,31 @@ export async function loadChaptersForIndex(projectDir, manifest) {
   return chapters
 }
 
-// --- Story bible entities (bible/*.md) ---
-function entityPath(projectDir, file) {
-  return joinPath(projectDir, format.ENTITY_DIR, file)
+// --- Pages: self-describing card trees (World = bible/, plot/, notes/, front-matter/, back-matter/) ---
+// Every card carries `root` (which folder tree it belongs to) and `file`, its path
+// relative to that root (possibly nested). Containers are folders with `_index.md`.
+function cardRootDir(projectDir, root) {
+  return joinPath(projectDir, root)
 }
+function cardFilePath(projectDir, root, file) {
+  return joinPath(projectDir, root, file)
+}
+// A container card's folder (relative to its root); null for a leaf.
+const containerFolder = (card) => (card.isContainer ? card.file.slice(0, card.file.lastIndexOf('/')) : null)
+const parentDirOf = (file) => (file.includes('/') ? file.slice(0, file.lastIndexOf('/')) : '')
 
-// The story bible is a self-describing document TREE (see cardTree.js). Load it
-// and flatten to the list the rest of the app works on — each entry keeps its
-// relative `file` path (possibly nested), plus `isContainer` / `parentId` /
-// `childIds` so the explorer can rebuild the sub-page hierarchy.
-export async function loadEntities(projectDir) {
-  const bibleDir = joinPath(projectDir, format.ENTITY_DIR)
-  if (!(await fs.pathExists(bibleDir))) return []
-  const tree = await cardTree.loadCardTree(fsAdapter, bibleDir)
-  const prefix = `${bibleDir}/`
+async function loadCards(projectDir, root) {
+  const rootDir = cardRootDir(projectDir, root)
+  if (!(await fs.pathExists(rootDir))) return []
+  const tree = await cardTree.loadCardTree(fsAdapter, rootDir)
+  const prefix = `${rootDir}/`
   const flat = []
   const walk = (cards, parentId) => {
     for (const card of cards) {
-      const file = card.path.startsWith(prefix) ? card.path.slice(prefix.length) : card.path
+      const path = card.isContainer ? joinPath(card.path, cardTree.INDEX_FILE) : card.path
+      const file = path.startsWith(prefix) ? path.slice(prefix.length) : path
       const childIds = (card.children || []).map((c) => c.meta?.id).filter(Boolean)
-      flat.push({ file, meta: card.meta, body: card.body, isContainer: card.isContainer, parentId, childIds })
+      flat.push({ root, file, meta: card.meta, body: card.body, isContainer: card.isContainer, parentId, childIds })
       if (card.children?.length) walk(card.children, card.meta?.id ?? null)
     }
   }
@@ -117,34 +124,148 @@ export async function loadEntities(projectDir) {
   return flat
 }
 
-export async function saveEntity(projectDir, file, meta, body) {
-  const path = entityPath(projectDir, file)
+// Every page in every tree, flattened. Each entry: { root, file, meta, body, isContainer, parentId, childIds }.
+export async function loadEntities(projectDir) {
+  const all = []
+  for (const root of format.CARD_ROOTS) all.push(...(await loadCards(projectDir, root)))
+  return all
+}
+
+export async function saveCard(projectDir, root, file, meta, body) {
+  const path = cardFilePath(projectDir, root, file)
   const slash = path.lastIndexOf('/')
   if (slash > 0) await fs.ensureDir(path.slice(0, slash)) // nested sub-pages
   await fs.writeTextAtomic(path, format.stringifyDocument(meta, body))
 }
 
-// Create a child card inside a parent card. If the parent is currently a LEAF
-// (`x.md`), it's converted to a CONTAINER (`x/_index.md`) first — the one move.
-// Returns the parent's (possibly new) file and the child's file, relative to bible/.
-export async function createSubCard(projectDir, parent, childMeta, childBody) {
-  const bibleDir = joinPath(projectDir, format.ENTITY_DIR)
-  let parentFolderRel
-  if (parent.isContainer) {
-    parentFolderRel = parent.file.slice(0, parent.file.lastIndexOf('/'))
-  } else {
-    const folderName = cardTree.cardFolderName(parent.meta.name, parent.meta.id)
-    const dirRel = parent.file.includes('/') ? parent.file.slice(0, parent.file.lastIndexOf('/')) : ''
-    parentFolderRel = dirRel ? joinPath(dirRel, folderName) : folderName
-    await fs.ensureDir(joinPath(bibleDir, parentFolderRel))
-    const content = await fs.readText(joinPath(bibleDir, parent.file))
-    await fs.writeTextAtomic(joinPath(bibleDir, parentFolderRel, cardTree.INDEX_FILE), content)
-    await fs.removePath(joinPath(bibleDir, parent.file))
+// Turn a leaf card (`x.md`) into a container (`x__id/_index.md`) so it can hold
+// children — the one structural move. Returns the card's new file (relative to root).
+async function ensureContainer(projectDir, card) {
+  if (card.isContainer) return card.file
+  const rootDir = cardRootDir(projectDir, card.root)
+  const folderRel = joinPath(parentDirOf(card.file), cardTree.cardFolderName(card.meta.name, card.meta.id))
+  await fs.ensureDir(joinPath(rootDir, folderRel))
+  const content = await fs.readText(joinPath(rootDir, card.file))
+  await fs.writeTextAtomic(joinPath(rootDir, folderRel, cardTree.INDEX_FILE), content)
+  await fs.removePath(joinPath(rootDir, card.file))
+  return joinPath(folderRel, cardTree.INDEX_FILE)
+}
+
+// Create a page at the top of a tree (parent = null) or inside a parent page.
+// Returns { file } relative to `root`.
+export async function createCard(projectDir, root, parent, meta, body = '') {
+  let dirRel = ''
+  if (parent) {
+    const parentFile = await ensureContainer(projectDir, parent)
+    dirRel = parentDirOf(parentFile)
   }
-  await fs.ensureDir(joinPath(bibleDir, parentFolderRel))
-  const childRel = joinPath(parentFolderRel, cardTree.cardLeafName(childMeta.name, childMeta.id))
-  await fs.writeTextAtomic(joinPath(bibleDir, childRel), format.stringifyDocument(childMeta, childBody))
-  return { parentFile: joinPath(parentFolderRel, cardTree.INDEX_FILE), childFile: childRel }
+  await fs.ensureDir(joinPath(cardRootDir(projectDir, root), dirRel))
+  const file = joinPath(dirRel, cardTree.cardLeafName(meta.name, meta.id))
+  await saveCard(projectDir, root, file, meta, body)
+  return { file }
+}
+
+// Kept for existing callers: a sub-page inside `parent`, in the parent's own tree.
+export async function createSubCard(projectDir, parent, childMeta, childBody) {
+  return createCard(projectDir, parent.root || format.WORLD_DIR, parent, childMeta, childBody)
+}
+
+// Delete a page; a container goes with everything inside it.
+export async function deleteCard(projectDir, card) {
+  const rootDir = cardRootDir(projectDir, card.root)
+  await fs.removePath(card.isContainer ? joinPath(rootDir, containerFolder(card)) : joinPath(rootDir, card.file))
+}
+
+// Move a page (and its children) into another parent or to the top of a tree —
+// possibly a different tree (e.g. a scrap in Notes moved into Plot).
+export async function moveCard(projectDir, card, targetRoot, targetParent) {
+  let targetDirRel = ''
+  if (targetParent) targetDirRel = parentDirOf(await ensureContainer(projectDir, targetParent))
+  const fromRootDir = cardRootDir(projectDir, card.root)
+  const toRootDir = cardRootDir(projectDir, targetRoot)
+  const sourceRel = card.isContainer ? containerFolder(card) : card.file
+  const baseName = sourceRel.split('/').pop()
+  const destRel = joinPath(targetDirRel, baseName)
+  if (card.root === targetRoot && sourceRel === destRel) return
+  await fs.ensureDir(joinPath(toRootDir, targetDirRel))
+  await fs.renamePath(joinPath(fromRootDir, sourceRel), joinPath(toRootDir, destRel))
+}
+
+// --- Book pages (book/*.md) ---
+export async function loadBook(projectDir, projectName) {
+  const pages = {}
+  for (const page of book.BOOK_PAGES) {
+    const path = joinPath(projectDir, book.BOOK_DIR, book.bookPageFile(page))
+    const parsed = (await fs.pathExists(path)) ? format.parseDocument(await fs.readText(path)) : { meta: {}, body: '' }
+    pages[page] = { meta: book.withBookDefaults(page, parsed.meta, projectName), body: parsed.body }
+  }
+  return pages
+}
+
+export async function saveBookPage(projectDir, page, meta, body) {
+  await fs.ensureDir(joinPath(projectDir, book.BOOK_DIR))
+  await fs.writeTextAtomic(joinPath(projectDir, book.BOOK_DIR, book.bookPageFile(page)), format.stringifyDocument(meta, body))
+}
+
+// Copy a picked image in as the book cover. Returns its path relative to the project.
+export async function setBookCover(projectDir, sourcePath) {
+  const dir = joinPath(projectDir, MEDIA_DIR, 'book')
+  await fs.ensureDir(dir)
+  const base = sourcePath.split(/[\\/]/).pop() || 'cover'
+  const stored = `cover-${format.generateId().slice(0, 6)}-${base}`
+  await fs.copyBinary(sourcePath, joinPath(dir, stored))
+  return joinPath(MEDIA_DIR, 'book', stored)
+}
+
+// A webview-loadable URL for any file inside the project (Tauri asset protocol).
+export function projectFileUrl(projectDir, relativePath) {
+  return convertFileSrc(joinPath(projectDir, relativePath))
+}
+
+// --- Drafts (.drafts/<owner>/NNN.md next to the document) ---
+export const chapterDraftDir = (file) => joinPath(format.CHAPTER_DIR, drafts.DRAFTS_DIR, file.replace(/\.md$/i, ''))
+export const bookDraftDir = (page) => joinPath(book.BOOK_DIR, drafts.DRAFTS_DIR, page)
+
+// All published drafts of a document, oldest first: [{ n, date, note, text }].
+export async function loadDrafts(projectDir, draftDir) {
+  const dir = joinPath(projectDir, draftDir)
+  if (!(await fs.pathExists(dir))) return []
+  const list = []
+  for (const entry of await fs.listDir(dir)) {
+    const n = entry.isDirectory ? null : drafts.draftNumberFromFile(entry.name)
+    if (n == null) continue
+    const { meta, body } = format.parseDocument(await fs.readText(joinPath(dir, entry.name)))
+    list.push({ n, date: meta.date || '', note: meta.note || '', text: body })
+  }
+  return list.sort((a, b) => a.n - b.n)
+}
+
+export async function writeDraft(projectDir, draftDir, { n, date, note = '', text }) {
+  const dir = joinPath(projectDir, draftDir)
+  await fs.ensureDir(dir)
+  await fs.writeTextAtomic(joinPath(dir, drafts.draftFileName(n)), format.stringifyDocument({ n, date, note }, text))
+}
+
+// --- Arc pages (arcs/<slug>.md) ---
+export async function loadArcs(projectDir) {
+  const dir = joinPath(projectDir, format.ARC_DIR)
+  if (!(await fs.pathExists(dir))) return []
+  const arcs = []
+  for (const entry of await fs.listDir(dir)) {
+    if (entry.isDirectory || !entry.name.toLowerCase().endsWith('.md')) continue
+    const { meta, body } = format.parseDocument(await fs.readText(joinPath(dir, entry.name)))
+    if (meta.name) arcs.push({ file: entry.name, meta, body })
+  }
+  return arcs
+}
+
+export async function saveArc(projectDir, file, meta, body) {
+  await fs.ensureDir(joinPath(projectDir, format.ARC_DIR))
+  await fs.writeTextAtomic(joinPath(projectDir, format.ARC_DIR, file), format.stringifyDocument(meta, body))
+}
+
+export async function deleteArcFile(projectDir, file) {
+  await fs.removePath(joinPath(projectDir, format.ARC_DIR, file))
 }
 
 // --- Data banks (banks/*.csv) ---

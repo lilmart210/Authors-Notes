@@ -7,6 +7,7 @@ import * as cardTree from './cardTree.js'
 import * as mentions from './mentions.js'
 import * as bookExport from './bookExport.js'
 import * as docSync from './docSync.js'
+import { createBinderApi } from './binderApi.js'
 
 const AUTOSAVE_DELAY_MS = 1500
 
@@ -22,13 +23,13 @@ export function ProjectProvider(props) {
   // 2. Signals / stores
   const [Project, SetProject] = createStore({ dir: null, manifest: null })
   // CurrentDoc.kind is 'chapter' | 'entity' | null
-  const [CurrentDoc, SetCurrentDoc] = createStore({ kind: null, id: null, file: null, meta: null, body: '' })
+  const [CurrentDoc, SetCurrentDoc] = createStore({ kind: null, id: null, file: null, root: null, meta: null, body: '' })
   const [Status, SetStatus] = createSignal('idle')
   const [Notice, SetNotice] = createSignal(null) // last failed action (open/import/…), not a save
   const [Busy, SetBusy] = createSignal(false)
   const [Importing, SetImporting] = createSignal(false)
   const [ImportFiles, SetImportFiles] = createSignal([])
-  const [Entities, SetEntities] = createSignal([])
+  const [Cards, SetCards] = createSignal([]) // every page in every tree: World (bible/), Plot, Notes, front/back matter
   const [ChapterBodies, SetChapterBodies] = createSignal([])
   const [EntityIndex, SetEntityIndex] = createSignal({ byEntity: {}, firstSeen: {} })
   const [Banks, SetBanks] = createSignal([])
@@ -41,6 +42,8 @@ export function ProjectProvider(props) {
   let previewTabId = null // the single VS-Code-style preview (italic) tab, if any
 
   // 5. Functions / handlers
+  // The World (story bible) is the cards in bible/; mentions, cast and pickers use only these.
+  const Entities = () => Cards().filter((card) => card.root === format.WORLD_DIR)
   const HasProject = () => Boolean(Project.dir)
   const Chapters = () => manuscriptGroup()?.children ?? []
 
@@ -130,6 +133,7 @@ export function ProjectProvider(props) {
   async function FlushEverything() {
     docSync.flushAll()
     await flushSave()
+    binder.flushBinder()
     for (const id of [...chapterSaveTimers.keys()]) {
       clearTimeout(chapterSaveTimers.get(id))
       chapterSaveTimers.delete(id)
@@ -164,6 +168,7 @@ export function ProjectProvider(props) {
       dkind: descriptor.dkind,
       docId: descriptor.docId,
       file: descriptor.file,
+      params: descriptor.params,
       preview,
     }
     // Double-click semantics: if a PREVIEW (italic) tab of this doc is open,
@@ -187,7 +192,10 @@ export function ProjectProvider(props) {
     }
     const existing = containerApi.Tabs().find((t) => t.key === descriptor.key)
     if (existing) {
+      if (descriptor.params) containerApi.UpdateTab(existing.id, { params: descriptor.params })
       containerApi.SelectTab(existing.id)
+      // SelectTab is a no-op on the active tab — reload so new params show
+      if (descriptor.params) { const tab = containerApi.GetTab(existing.id); if (tab) loadDocIntoCurrent(tab) }
       if (!preview) promoteTab(existing.id) // explicit permanent open
       return
     }
@@ -238,8 +246,8 @@ export function ProjectProvider(props) {
       const live = docSync.docString(tab.file)
       SetCurrentDoc({ kind: 'chapter', id: tab.docId, file: tab.file, meta, body: live ?? body })
     } else if (tab.dkind === 'entity' || tab.dkind === 'group') {
-      const entity = Entities().find((e) => e.meta.id === tab.docId)
-      if (entity) SetCurrentDoc({ kind: entity.meta.type === 'group' ? 'group' : 'entity', id: entity.meta.id, file: entity.file, meta: entity.meta, body: entity.body })
+      const entity = Cards().find((e) => e.meta.id === tab.docId)
+      if (entity) SetCurrentDoc({ kind: entity.meta.type === 'group' ? 'group' : 'entity', id: entity.meta.id, file: entity.file, root: entity.root, meta: entity.meta, body: entity.body })
     } else if (tab.dkind === 'bank') {
       const bank = Banks().find((b) => b.file === tab.file)
       if (bank) SetCurrentDoc({ kind: 'bank', id: bank.file, file: bank.file, meta: { name: bank.name }, body: bank.entries.join('\n') })
@@ -247,6 +255,12 @@ export function ProjectProvider(props) {
       SetCurrentDoc({ kind: 'timeline', id: '__timeline__', file: null, meta: null, body: '' })
     } else if (tab.dkind === 'graph') {
       SetCurrentDoc({ kind: 'graph', id: '__graph__', file: null, meta: null, body: '' })
+    } else if (tab.dkind === 'book') {
+      SetCurrentDoc({ kind: 'book', id: tab.docId, file: null, root: null, meta: null, body: '' })
+    } else if (tab.dkind === 'arc') {
+      SetCurrentDoc({ kind: 'arc', id: tab.docId, file: null, root: null, meta: null, body: '' })
+    } else if (tab.dkind === 'diff') {
+      SetCurrentDoc({ kind: 'diff', id: tab.docId, file: null, root: null, meta: { ...(tab.params || {}) }, body: '' })
     }
   }
 
@@ -262,6 +276,7 @@ export function ProjectProvider(props) {
       SetCurrentDoc({ kind: null, id: null, file: null, meta: null, body: '' })
       await AddChapter()
       await loadBibleAndIndex()
+      await binder.loadBinder()
     })
   }
 
@@ -284,6 +299,7 @@ export function ProjectProvider(props) {
     SetProject({ dir, manifest })
     recordRecent(dir)
     await loadBibleAndIndex()
+    await binder.loadBinder()
     await openFirstChapter(manifest)
   }
 
@@ -419,12 +435,12 @@ export function ProjectProvider(props) {
   // --- entities / bible ---
   async function loadBibleAndIndex() {
     if (!Project.dir || !Project.manifest) return
-    const entities = await service.loadEntities(Project.dir)
+    const cards = await service.loadEntities(Project.dir)
     const chapters = await service.loadChaptersForIndex(Project.dir, unwrap(Project.manifest))
-    SetEntities(entities)
+    SetCards(cards)
     SetChapterBodies(chapters)
     SetBanks(await service.loadBanks(Project.dir))
-    SetEntityIndex(mentions.buildIndex(chapters, entities.map(entityRef)))
+    SetEntityIndex(mentions.buildIndex(chapters, cards.filter((c) => c.root === format.WORLD_DIR).map(entityRef)))
   }
 
   async function CreateBank(name = 'new-bank') {
@@ -455,18 +471,18 @@ export function ProjectProvider(props) {
     SetEntityIndex(mentions.buildIndex(ChapterBodies(), Entities().map(entityRef)))
   }
 
-  async function createEntityRecord(name, type, extraMeta = {}) {
+  async function createEntityRecord(name, type, extraMeta = {}, root = format.WORLD_DIR) {
     const id = format.generateId()
-    const file = cardTree.cardLeafName(name, id) // a leaf card at the bible root
+    const file = cardTree.cardLeafName(name, id) // a leaf card at the top of its tree
     const meta = { id, name, type, aliases: [], status: 'new', ...extraMeta }
     if (type === 'group') {
       meta.members = []
       meta.attributes = [] // [{ key, mode: 'fixed'|'per-member', value? }]
       meta.relationships = [] // [{ from, to, label }]
     }
-    await service.saveEntity(Project.dir, file, meta, '')
-    const entity = { file, meta, body: '', isContainer: false, parentId: null, childIds: [] }
-    SetEntities([...Entities(), entity])
+    await service.saveCard(Project.dir, root, file, meta, '')
+    const entity = { root, file, meta, body: '', isContainer: false, parentId: null, childIds: [] }
+    SetCards([...Cards(), entity])
     rebuildIndex()
     return entity
   }
@@ -480,7 +496,7 @@ export function ProjectProvider(props) {
     if (!parent) return
     const childMeta = { id: format.generateId(), name, type, aliases: [], status: 'new' }
     await service.createSubCard(Project.dir, parent, childMeta, '')
-    await loadBibleAndIndex()
+    await reloadCards()
     const child = EntityById(childMeta.id)
     if (child) await OpenEntity(child, { preview: false })
   }
@@ -519,7 +535,7 @@ export function ProjectProvider(props) {
   }
 
   const Groups = () => Entities().filter((e) => e.meta.type === 'group')
-  const EntityById = (id) => Entities().find((e) => e.meta.id === id)
+  const EntityById = (id) => Cards().find((e) => e.meta.id === id)
 
   // A collection's effective members = explicitly-listed ids PLUS every entity
   // that matches the collection's attribute rule. So "Red Demons" can be defined
@@ -551,8 +567,8 @@ export function ProjectProvider(props) {
     if (collection && !(rule?.key)) {
       const members = [...(collection.meta.members || []), entity.meta.id]
       const meta = { ...collection.meta, members }
-      await service.saveEntity(Project.dir, collection.file, meta, collection.body).catch(console.error)
-      SetEntities((list) => list.map((e) => (e.file === collection.file ? { ...e, meta } : e)))
+      await trackSave(`${collection.root}/${collection.file}`, () => service.saveCard(Project.dir, collection.root, collection.file, meta, collection.body))
+      SetCards((list) => list.map((e) => (e.meta.id === collection.meta.id ? { ...e, meta } : e)))
       if (CurrentDoc.id === collectionId) SetCurrentDoc('meta', 'members', members)
     }
     await OpenEntity(entity, { preview: false })
@@ -584,8 +600,8 @@ export function ProjectProvider(props) {
     const already = entity.meta.name === clean || aliases.some((a) => (typeof a === 'object' ? a.form : a) === clean)
     if (already) return
     const meta = { ...entity.meta, aliases: [...aliases, clean] }
-    await service.saveEntity(Project.dir, entity.file, meta, entity.body).catch(console.error)
-    SetEntities(Entities().map((e) => (e.file === entity.file ? { ...e, meta } : e)))
+    await trackSave(`${entity.root}/${entity.file}`, () => service.saveCard(Project.dir, entity.root, entity.file, meta, entity.body))
+    SetCards(Cards().map((e) => (e.meta.id === entity.meta.id ? { ...e, meta } : e)))
     if (CurrentDoc.id === id) SetCurrentDoc('meta', 'aliases', meta.aliases)
     rebuildIndex()
   }
@@ -854,7 +870,7 @@ export function ProjectProvider(props) {
       SaveTimer = undefined
     }
     if (!Project.dir || !CurrentDoc.file || !CurrentDoc.meta) return
-    const dir = Project.dir, file = CurrentDoc.file, kind = CurrentDoc.kind, id = CurrentDoc.id
+    const dir = Project.dir, file = CurrentDoc.file, kind = CurrentDoc.kind, id = CurrentDoc.id, root = CurrentDoc.root || format.WORLD_DIR
     const meta = unwrap(CurrentDoc.meta)
     const body = CurrentDoc.body
     if (kind === 'bank') {
@@ -864,8 +880,8 @@ export function ProjectProvider(props) {
       return
     }
     if (kind === 'entity' || kind === 'group') {
-      if (await trackSave(file, () => service.saveEntity(dir, file, meta, body))) {
-        SetEntities(Entities().map((e) => (e.file === file ? { ...e, meta, body } : e)))
+      if (await trackSave(`${root}/${file}`, () => service.saveCard(dir, root, file, meta, body))) {
+        SetCards(Cards().map((e) => (e.meta.id === id ? { ...e, meta, body } : e)))
       }
     } else {
       // The prose body lives in the shared Y.Doc — use its live text so a meta
@@ -978,11 +994,61 @@ export function ProjectProvider(props) {
       SetImporting(false)
       SetImportFiles([])
       await loadBibleAndIndex()
+      await binder.loadBinder()
       await openFirstChapter(manifest)
     })
   }
 
+  // --- binder plumbing ---
+  // Reload every page tree. An open page that moved (or became a folder) keeps
+  // saving to its new path.
+  async function reloadCards() {
+    if (!Project.dir) return
+    const cards = await service.loadEntities(Project.dir)
+    SetCards(cards)
+    if (CurrentDoc.kind === 'entity' || CurrentDoc.kind === 'group') {
+      const fresh = cards.find((c) => c.meta.id === CurrentDoc.id)
+      if (fresh && (fresh.file !== CurrentDoc.file || fresh.root !== CurrentDoc.root)) {
+        SetCurrentDoc('file', fresh.file)
+        SetCurrentDoc('root', fresh.root)
+      }
+    }
+    if (containerApi) {
+      for (const tab of containerApi.Tabs()) {
+        const card = (tab.dkind === 'entity' || tab.dkind === 'group') && cards.find((c) => c.meta.id === tab.docId)
+        if (card && card.file !== tab.file) containerApi.UpdateTab(tab.id, { file: card.file })
+      }
+    }
+    rebuildIndex()
+  }
+  function closeTabsWhere(predicate) {
+    if (!containerApi) return
+    for (const tab of containerApi.Tabs()) if (predicate(tab)) containerApi.RemoveTab(tab.id)
+  }
+  function retitleTabs(key, title, patch = {}) {
+    if (!containerApi) return
+    for (const tab of containerApi.Tabs()) if (tab.key === key) containerApi.UpdateTab(tab.id, { Name: title, ...patch })
+  }
+  // Replace a chapter's whole text (restoring a draft). Open views update live.
+  function ReplaceChapterBody(id, text) {
+    const chapter = ChapterById(id)
+    if (!chapter) return
+    if (docSync.replaceText(chapter.file, text)) return // the shared doc saves itself
+    SetChapterBodies(ChapterBodies().map((c) => (c.id === id ? { ...c, body: text } : c)))
+    const dir = Project.dir
+    trackSave(chapter.file, () => service.saveDocument(dir, chapter.file, chapter.meta, text))
+    rebuildIndex()
+  }
+  const binder = createBinderApi({
+    Project, trackSave, openTabFor, closeTabsWhere, retitleTabs, flushSave, CurrentDoc,
+    ChapterBodies, ChapterById, UpdateChapterMeta, ReplaceChapterBody, ArcBands,
+    Cards, SetCards, reloadCards, OpenEntityById, UpdateMeta,
+  })
+
   const projectApi = {
+    ...binder,
+    Cards,
+    WorldDir: format.WORLD_DIR,
     Project,
     CurrentDoc,
     Status,
