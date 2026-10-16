@@ -13,9 +13,10 @@ boilerplate that didn't help them lay out a book.
   brainstorms, and original → reviewed → final chapter folders.
 
 > Status (2026-10-15): **direction agreed by the author** after four prototype rounds
-> ("this is so much better"). Not yet built in the app. The only shipped piece is the File menu.
+> ("this is so much better"), and **built in the app** on branch `binder-redesign`, except
+> Local AI, which waits on the runtime decision. See [Build status](#build-status).
 
-## Already in the app
+## File menu
 
 File menu: **Open project… · New project… · Open recent… · Import chapters… · Export…**.
 Open recent opens the recent-projects modal; recents are no longer listed in the dropdown.
@@ -42,7 +43,7 @@ Now every write goes through one tracker (`trackSave` in ProjectContext):
 | Section | Holds |
 | --- | --- |
 | **Book** | A book row (cover thumbnail, title, words vs plan) that opens the Overview. Also **Blurb**, **Synopsis** and **Publishing**. |
-| **Plot** | **Outline**, the chapter-by-chapter cards by arc that used to be Series Timeline, plus free pages and folders (e.g. Threads). |
+| **Plot** | **Outline**, the chapter-by-chapter cards by arc that used to be Series Timeline (each card shows its draft chip and dot; a chapter with no text is a dashed "planned" card), plus free pages and folders (e.g. Threads). |
 | **Manuscript** | Front matter, arcs (each arc is an openable page), chapters (with word counts), back matter. |
 | **World** | The story bible as folders of pages (Characters, Places, Factions, Power System, Techniques, Treasures, Creatures, Lore, Glossary…). |
 | **Notes** | Ideas, Research (links), Scraps, Style guide: anything that isn't the book itself. |
@@ -140,9 +141,22 @@ File → Export… or **Export book…** on Publishing. Choices are organized by
   drafts); cover, title page, copyright page, front and back matter, chapter headings.
 - It checks the Book pages for title, author, cover, blurb, language and ISBN, and shows a
   preview of the first pages.
-- **App gaps:** Pandoc already produces DOCX/EPUB/HTML, but the book's title, author and
-  cover aren't passed to it yet, and there is **no PDF engine** (needs e.g. typst bundled as
-  Pandoc's PDF engine, or printing to PDF from the app window).
+- Files go to the project's own `exports/` folder: `exports/<Title>.epub` and so on;
+  web serial writes `exports/serial/001-chapter-title.txt`, one per chapter. Pandoc's input
+  is kept in `exports/.build/`.
+- **EPUB:** Pandoc with the book's title, subtitle, author, language, copyright line (rights),
+  blurb (description), series and number, ebook ISBN and cover. Pandoc's own title page is
+  switched on or off by the Title page option. The copyright page and pages named
+  Dedication, Acknowledgments, Foreword… are marked as front matter for readers' tables
+  of contents. Chapter headings read "Chapter 1" over the title.
+- **Word:** a standard manuscript first page (author and "about 64,000 words" across the
+  top, title and byline centred), then every chapter on a new page.
+- **Print PDF:** Pandoc's HTML of the book, laid out at the trim size with a title page,
+  copyright page and page numbers, saved as `exports/<Title> (print).html` and sent to the
+  print dialog, where **Save as PDF** writes the file. No PDF engine is bundled.
+- **Still open:** Word uses Pandoc's default styles (not double-spaced 12 pt Times; that needs
+  a manuscript `reference.docx`), and the print dialog has only been checked headlessly, not
+  in the Tauri window.
 
 ## Local AI
 
@@ -166,12 +180,26 @@ File → Export… or **Export book…** on Publishing. Choices are organized by
   **one command registry** used by both the UI and the AI, with confirm and undo.
   Autocomplete = a small model showing faded suggested text in CodeMirror; Tab accepts.
 
-## Build order (proposed)
+## Build status
 
-1. Book section + Overview (cover, title ideas, logline, tags, plan) + Blurb versions + Synopsis.
-2. World and Notes as page trees with folder tables, quick add and links. Migrate
-   collections and member rules.
-3. Chapter drafts (versions on disk), draft log and diff, Topics in the panel.
-4. Selection menu and margin scraps.
-5. Publishing page and the export dialog (metadata to Pandoc, then a PDF engine).
-6. AI: command registry → model manager and downloads → autocomplete → assistant tools.
+Built on branch `binder-redesign` in this order, each step tested headlessly with the
+end-to-end harness (see [Development Guidelines](./Development%20Guidelines.md#end-to-end-tests))
+and committed:
+
+| Step | State |
+| --- | --- |
+| Save status fix (chapter text never saving; honest status bar) | Built |
+| Storage: book pages, drafts, arcs, page trees | Built |
+| Sidebar by parts of a book; Book pages; chapter drafts, draft log, compare and restore | Built |
+| Page views: folder tables, fields that link, quick add, Linked from | Built |
+| Selection menu and margin scraps; Notes › Scrapped text | Built |
+| Export dialog by destination | Built (gaps listed under Export) |
+| Outline with draft states | Built |
+| Seeded test project (Book, Plot, Notes, draft history) | Built — `scripts/seed-project.mjs` |
+| AI: command registry → model manager and downloads → autocomplete → assistant tools | **Waiting on the author's runtime decision** |
+
+Known limitations:
+
+- Two open views of the same chapter keep separate scrap states.
+- Old collections show their members as child pages; they aren't rewritten on disk.
+- The cover is picked with a file dialog; dropping an image on it isn't supported yet.
