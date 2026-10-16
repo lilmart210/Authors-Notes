@@ -9,6 +9,7 @@ pixel-level spec the real app (`Main/Client`) is built to match. Kept here so th
 | `02 - Plotline Timeline.html` | Timeline / plotline editor — arc-grouped chapter spine, typed notes, future-ideas lane | https://claude.ai/code/artifact/78062c30-38f4-4d5c-b023-7823c6290407 |
 | `03 - Entities and Mentions.html` | Entity/mentions model — typed browser, entity page (aliases, infobox, sections, relationships), consistency banner, mentions | https://claude.ai/code/artifact/8b1cb357-c8ca-4ddf-8056-0e6604c2c921 |
 | `04 - Groups Attributes Graph.html` | Groups + inheritable attributes + relationship graph ("character creator") | https://claude.ai/code/artifact/2c0afea5-c1ad-48fc-8577-a6bece8d30c9 |
+| `05 - Binder (proposal).html` | **Agreed direction (2026-10-15), not yet built.** The left side organized as the parts of a book (Book · Plot · Manuscript · World · Notes), numbered chapter drafts with diffs, margin scraps, planned length, export by destination, local AI models. Written spec: [`../Binder Redesign.md`](../Binder%20Redesign.md). | https://claude.ai/artifact/U1kiepXaujsfwCfrRJH1i4 |
 
 **Rule:** when building UI, port these files' CSS/DOM verbatim and wire real data — don't
 re-derive the look. See `../UI Design.md` for the written spec.
