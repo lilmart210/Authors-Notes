@@ -7,7 +7,7 @@
 import * as Y from 'yjs'
 
 const registry = new Map() // key -> { ydoc, awareness, refs, timer, persist }
-const PERSIST_DELAY_MS = 4000
+const PERSIST_DELAY_MS = 1000 // short: a crash loses at most ~1 s of typing
 
 // A tiny local "awareness" channel shared by every view of one doc: a map of
 // { viewId -> { anchor, head, color } } plus change notifications. No network —
@@ -22,7 +22,7 @@ function makeAwareness() {
     set(id, state) {
       if (state == null) states.delete(id)
       else states.set(id, state)
-      subs.forEach((fn) => fn())
+      subs.forEach((fn) => fn(id)) // subscribers skip their own id
     },
     subscribe(fn) {
       subs.add(fn)

@@ -89,8 +89,6 @@ body{ background:var(--bg); color:var(--ink); overflow:hidden;
                   background:transparent; border:0; border-radius:6px; padding:6px 9px; cursor:pointer; }
 .filemenu button:hover{ background:var(--accent-soft); }
 .filemenu-sep{ height:1px; background:var(--border); margin:5px 4px; }
-.filemenu-label{ font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--faint); padding:2px 9px 3px; }
-.filemenu-recent{ color:var(--dim) !important; font-size:12px !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .filemenu button.menu-check{ display:flex; align-items:center; gap:2px; }
 .menu-check .ck{ display:inline-block; width:14px; color:var(--accent); }
 .menu-stepper{ display:flex; align-items:center; gap:6px; padding:6px 9px; }
@@ -368,6 +366,10 @@ body{ background:var(--bg); color:var(--ink); overflow:hidden;
 .status{ background:var(--chrome); color:var(--dim); border-top:1px solid var(--border); display:flex; align-items:center; font-size:11.5px; }
 .status .s{ padding:0 10px; height:100%; display:inline-flex; align-items:center; gap:6px; }
 .status .sp{ flex:1; } .status .mono{ font-variant-numeric:tabular-nums; } .status .save{ color:var(--good); }
+.status .save.busy{ color:var(--dim); }
+.status .save.err,.status .s.err{ color:#d05a68; }
+.status .s.err{ min-width:0; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; line-height:24px; }
+.s-retry{ font:inherit; font-size:11.5px; color:var(--link); background:transparent; border:0; padding:0 4px; cursor:pointer; text-decoration:underline; }
 
 .editorbody{ flex:1; min-height:0; }
 

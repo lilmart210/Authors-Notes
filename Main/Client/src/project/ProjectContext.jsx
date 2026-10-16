@@ -8,7 +8,7 @@ import * as mentions from './mentions.js'
 import * as bookExport from './bookExport.js'
 import * as docSync from './docSync.js'
 
-const AUTOSAVE_DELAY_MS = 5000
+const AUTOSAVE_DELAY_MS = 1500
 
 const ProjectContext = createContext()
 
@@ -24,6 +24,7 @@ export function ProjectProvider(props) {
   // CurrentDoc.kind is 'chapter' | 'entity' | null
   const [CurrentDoc, SetCurrentDoc] = createStore({ kind: null, id: null, file: null, meta: null, body: '' })
   const [Status, SetStatus] = createSignal('idle')
+  const [Notice, SetNotice] = createSignal(null) // last failed action (open/import/…), not a save
   const [Busy, SetBusy] = createSignal(false)
   const [Importing, SetImporting] = createSignal(false)
   const [ImportFiles, SetImportFiles] = createSignal([])
@@ -74,14 +75,68 @@ export function ProjectProvider(props) {
   async function run(action) {
     if (Busy()) return
     SetBusy(true)
+    SetNotice(null)
     try {
       await action()
     } catch (err) {
       console.error(err)
-      SetStatus('error')
+      SetNotice(String(err?.message || err))
     } finally {
       SetBusy(false)
     }
+  }
+
+  // --- save tracking: the status bar reports real disk writes, never a guess ---
+  // Status: 'idle' (nothing to report) | 'saving' (a write is in flight) |
+  // 'saved' (just finished; drops back to idle) | 'error' (a write failed — retryable).
+  const FailedSaves = new Map() // file -> write() to retry
+  const PendingWrites = new Set()
+  let InFlight = 0
+  let SavedTimer
+  function refreshSaveStatus() {
+    if (FailedSaves.size) SetStatus('error')
+    else if (InFlight) SetStatus('saving')
+    else {
+      SetStatus('saved')
+      clearTimeout(SavedTimer)
+      SavedTimer = setTimeout(() => { if (Status() === 'saved') SetStatus('idle') }, 1500)
+    }
+  }
+  function trackSave(key, write) {
+    const job = (async () => {
+      InFlight += 1
+      if (!FailedSaves.size) SetStatus('saving')
+      try {
+        await write()
+        FailedSaves.delete(key)
+        return true
+      } catch (err) {
+        console.error(err)
+        FailedSaves.set(key, write)
+        return false
+      } finally {
+        InFlight -= 1
+        refreshSaveStatus()
+      }
+    })()
+    PendingWrites.add(job)
+    job.finally(() => PendingWrites.delete(job))
+    return job
+  }
+  function RetrySaves() {
+    for (const [key, write] of [...FailedSaves]) trackSave(key, write)
+  }
+  // Write every pending edit now (window close, project switch). True when all landed.
+  async function FlushEverything() {
+    docSync.flushAll()
+    await flushSave()
+    for (const id of [...chapterSaveTimers.keys()]) {
+      clearTimeout(chapterSaveTimers.get(id))
+      chapterSaveTimers.delete(id)
+      saveChapterNow(id)
+    }
+    await Promise.allSettled([...PendingWrites])
+    return FailedSaves.size === 0
   }
 
   // --- split-container tab plumbing ---
@@ -193,7 +248,6 @@ export function ProjectProvider(props) {
     } else if (tab.dkind === 'graph') {
       SetCurrentDoc({ kind: 'graph', id: '__graph__', file: null, meta: null, body: '' })
     }
-    SetStatus('saved')
   }
 
   // --- projects ---
@@ -201,6 +255,7 @@ export function ProjectProvider(props) {
     return run(async () => {
       const dir = await pickFolder('Choose an empty folder for the new project')
       if (!dir) return
+      if (Project.dir) await FlushEverything()
       const { manifest } = await service.createProject(dir, { name: projectNameFromDir(dir) })
       SetProject({ dir, manifest })
       recordRecent(dir)
@@ -223,6 +278,8 @@ export function ProjectProvider(props) {
   }
 
   async function openProjectAt(dir) {
+    // land the current project's pending edits before its files leave memory
+    if (Project.dir) await FlushEverything()
     const { manifest } = await service.openProject(dir)
     SetProject({ dir, manifest })
     recordRecent(dir)
@@ -266,7 +323,7 @@ export function ProjectProvider(props) {
       }),
     )
     await service.saveManifest(Project.dir, unwrap(Project.manifest))
-    SetChapterBodies([...ChapterBodies(), { id, number: num, title, body: '', meta }])
+    SetChapterBodies([...ChapterBodies(), { id, file, number: num, title, body: '', meta }])
     if (open) await OpenDocument(child, { preview: false })
     return child
   }
@@ -335,8 +392,16 @@ export function ProjectProvider(props) {
     const info = ChapterBodies().find((c) => c.id === docId)
     const persist = (text) => {
       SetChapterBodies((cs) => cs.map((c) => (c.id === docId ? { ...c, body: text } : c)))
-      const chapter = ChapterBodies().find((c) => c.id === docId)
-      if (chapter && Project.dir) service.saveDocument(Project.dir, chapter.file, chapter.meta, text).catch(console.error)
+      const dir = Project.dir
+      // `file` is the doc's own key, so it can't drift from what's on disk. A chapter
+      // missing from memory is reported as a failed save, never skipped silently.
+      if (dir) {
+        trackSave(file, async () => {
+          const chapter = ChapterBodies().find((c) => c.id === docId)
+          if (!chapter) throw new Error(`Chapter ${docId} is not loaded — couldn't save ${file}`)
+          await service.saveDocument(dir, file, chapter.meta, text)
+        })
+      }
       if (CurrentDoc.id === docId) SetCurrentDoc('body', text)
       rebuildIndex()
     }
@@ -604,12 +669,16 @@ export function ProjectProvider(props) {
   // Edit a chapter's frontmatter whether or not it's the open document (the dock
   // can plan a chapter that isn't in the editor). Saves that chapter's own file.
   const chapterSaveTimers = new Map()
+  function saveChapterNow(id) {
+    const chapter = ChapterBodies().find((c) => c.id === id)
+    const dir = Project.dir
+    if (chapter && dir) trackSave(chapter.file, () => service.saveDocument(dir, chapter.file, chapter.meta, chapter.body))
+  }
   function scheduleChapterSave(id) {
     if (chapterSaveTimers.has(id)) clearTimeout(chapterSaveTimers.get(id))
-    chapterSaveTimers.set(id, setTimeout(async () => {
+    chapterSaveTimers.set(id, setTimeout(() => {
       chapterSaveTimers.delete(id)
-      const chapter = ChapterBodies().find((c) => c.id === id)
-      if (chapter && Project.dir) await service.saveDocument(Project.dir, chapter.file, chapter.meta, chapter.body).catch(console.error)
+      saveChapterNow(id)
     }, AUTOSAVE_DELAY_MS))
   }
   function UpdateChapterMeta(id, key, value) {
@@ -775,7 +844,6 @@ export function ProjectProvider(props) {
   }
 
   function scheduleSave() {
-    SetStatus('idle')
     if (SaveTimer) clearTimeout(SaveTimer)
     SaveTimer = setTimeout(flushSave, AUTOSAVE_DELAY_MS)
   }
@@ -786,36 +854,32 @@ export function ProjectProvider(props) {
       SaveTimer = undefined
     }
     if (!Project.dir || !CurrentDoc.file || !CurrentDoc.meta) return
-    SetStatus('saving')
-    try {
-      const meta = unwrap(CurrentDoc.meta)
-      const body = CurrentDoc.body
-      if (CurrentDoc.kind === 'bank') {
-        await service.saveBankRaw(Project.dir, CurrentDoc.file, body)
-        SetBanks(Banks().map((b) => (b.file === CurrentDoc.file ? { ...b, entries: format.bankEntries(body) } : b)))
-        SetStatus('saved')
-        return
+    const dir = Project.dir, file = CurrentDoc.file, kind = CurrentDoc.kind, id = CurrentDoc.id
+    const meta = unwrap(CurrentDoc.meta)
+    const body = CurrentDoc.body
+    if (kind === 'bank') {
+      if (await trackSave(file, () => service.saveBankRaw(dir, file, body))) {
+        SetBanks(Banks().map((b) => (b.file === file ? { ...b, entries: format.bankEntries(body) } : b)))
       }
-      if (CurrentDoc.kind === 'entity' || CurrentDoc.kind === 'group') {
-        await service.saveEntity(Project.dir, CurrentDoc.file, meta, body)
-        SetEntities(Entities().map((e) => (e.file === CurrentDoc.file ? { ...e, meta, body } : e)))
-      } else {
-        // The prose body lives in the shared Y.Doc — use its live text so a meta
-        // save (from the dock) never clobbers unsaved edits with a stale body.
-        const liveBody = docSync.docString(CurrentDoc.file) ?? body
-        await service.saveDocument(Project.dir, CurrentDoc.file, meta, liveBody)
+      return
+    }
+    if (kind === 'entity' || kind === 'group') {
+      if (await trackSave(file, () => service.saveEntity(dir, file, meta, body))) {
+        SetEntities(Entities().map((e) => (e.file === file ? { ...e, meta, body } : e)))
+      }
+    } else {
+      // The prose body lives in the shared Y.Doc — use its live text so a meta
+      // save (from the dock) never clobbers unsaved edits with a stale body.
+      const liveBody = docSync.docString(file) ?? body
+      if (await trackSave(file, () => service.saveDocument(dir, file, meta, liveBody))) {
         SetChapterBodies(
           ChapterBodies().map((c) =>
-            c.id === CurrentDoc.id ? { ...c, title: meta.title, number: meta.number ?? null, body: liveBody, meta } : c,
+            c.id === id ? { ...c, title: meta.title, number: meta.number ?? null, body: liveBody, meta } : c,
           ),
         )
       }
-      rebuildIndex()
-      SetStatus('saved')
-    } catch (err) {
-      console.error(err)
-      SetStatus('error')
     }
+    rebuildIndex()
   }
 
   // --- export (offline, native Markdown/text) ---
@@ -922,6 +986,9 @@ export function ProjectProvider(props) {
     Project,
     CurrentDoc,
     Status,
+    Notice,
+    RetrySaves,
+    FlushEverything,
     Busy,
     HasProject,
     Chapters,

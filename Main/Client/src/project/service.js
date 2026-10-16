@@ -85,7 +85,7 @@ export async function loadChaptersForIndex(projectDir, manifest) {
   const chapters = []
   for (const child of group?.children ?? []) {
     const { meta, body } = format.parseDocument(await fs.readText(chapterPath(projectDir, child.file)))
-    chapters.push({ id: child.id, number: meta.number ?? null, title: meta.title ?? child.title, body, meta })
+    chapters.push({ id: child.id, file: child.file, number: meta.number ?? null, title: meta.title ?? child.title, body, meta })
   }
   return chapters
 }

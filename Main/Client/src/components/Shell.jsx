@@ -28,7 +28,7 @@ const APP_VERSION = 'v0.1.0'
 
 export default function Shell() {
   const {
-    Project, CurrentDoc, Status, Busy, HasProject, Chapters, Entities, Banks,
+    Project, CurrentDoc, Status, Notice, RetrySaves, FlushEverything, Busy, HasProject, Chapters, Entities, Banks,
     LeftView, SetLeftView, NewProject, OpenProject, OpenProjectPath, RecentProjects, BeginImport, Importing,
     AddChapter, nextChapterNumber, chapterNumberExists, OpenDocument, OpenChapterById, OpenEntity, OpenEntityById, EntityById, Groups, MembersOf, MentionsFor, OpenTimeline, OpenGraph,
     CastInChapter, CastForChapter, ChapterById, UpdateChapterMeta, SetArcForChapters, DeleteChapters, ArcBands, SearchProject, UpdateBody, UpdateMeta, TimelineChapters, CreateEntity, CreateEntityInCollection,
@@ -153,7 +153,26 @@ export default function Shell() {
   // apply initial theme
   document.documentElement.setAttribute('data-theme', ThemeName())
 
+  // 3. onMount
+  // Closing the window writes every pending edit first (chapter text otherwise waits
+  // a few seconds after the last keystroke). If a write fails the window stays open
+  // with the error in the status bar; closing a second time quits anyway.
+  let CloseBlocked = false
+  onMount(() => {
+    const unlisten = appWindow.onCloseRequested(async (event) => {
+      const saved = await FlushEverything()
+      if (!saved && !CloseBlocked) {
+        CloseBlocked = true
+        event.preventDefault()
+      }
+    })
+    onCleanup(() => { unlisten.then((stop) => stop()) })
+  })
+
   // 4. Effects
+  createEffect(() => {
+    if (Status() !== 'error') CloseBlocked = false
+  })
   // The inspector is a transient drill-in on one character; whenever the open
   // document changes, drop it so the dock reflects the chapter you're in.
   createEffect(() => {
@@ -361,12 +380,16 @@ export default function Shell() {
   const arcRange = (band) => (band.from == null ? '' : band.to !== band.from ? `${band.from}–${band.to}` : String(band.from))
 
   // 6. JSX-helper builders
+  // Only speaks up when something is happening: a write in flight, one that just
+  // landed, or one that failed. Nothing while idle.
   const saveLabel = () => {
     const state = Status()
     if (state === 'saving') return 'Saving…'
-    if (state === 'error') return 'Save failed'
-    return 'All changes saved'
+    if (state === 'saved') return 'Saved'
+    if (state === 'error') return 'Couldn’t save'
+    return ''
   }
+  const saveClass = () => ({ busy: Status() === 'saving', err: Status() === 'error' })
   const wordCount = () => {
     const matched = stripGeneratorMarkers(CurrentDoc.body || '').trim().match(/\S+/g)
     return matched ? matched.length : 0
@@ -401,19 +424,10 @@ export default function Shell() {
                 <div class="filemenu">
                   <button onClick={() => runMenu(OpenProject)}>Open project…</button>
                   <button onClick={() => runMenu(NewProject)}>New project…</button>
+                  <button onClick={() => runMenu(() => SetRecentOpen(true))}>Open recent…</button>
                   <button onClick={() => runMenu(BeginImport)}>Import chapters…</button>
+                  <div class="filemenu-sep"></div>
                   <button disabled={!HasProject()} onClick={() => runMenu(openExport)}>Export…</button>
-                  <Show when={RecentProjects().length}>
-                    <div class="filemenu-sep"></div>
-                    <div class="filemenu-label">Recent</div>
-                    <For each={RecentProjects()}>
-                      {(dir) => (
-                        <button class="filemenu-recent" title={dir} onClick={() => runMenu(() => OpenProjectPath(dir))}>
-                          {dir.split(/[\\/]/).pop().replace(/\.project$/i, '')}
-                        </button>
-                      )}
-                    </For>
-                  </Show>
                 </div>
               </Show>
             </div>
@@ -793,7 +807,15 @@ export default function Shell() {
       </div>
 
       <div class="status">
-        <span class="s save">{saveLabel()}</span>
+        <span class="s save" classList={saveClass()}>
+          {saveLabel()}
+          <Show when={Status() === 'error'}>
+            <button class="s-retry" onClick={RetrySaves}>Retry</button>
+          </Show>
+        </span>
+        <Show when={Notice()}>
+          <span class="s err" title={Notice()}>{Notice()}</span>
+        </Show>
         <Show when={isChapter() && CurrentDoc.meta?.pov}>
           <span class="s hl">POV: {CurrentDoc.meta.pov}</span>
         </Show>

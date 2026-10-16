@@ -73,8 +73,17 @@ export function createYjsBinding(ydoc, awareness) {
         else this.view.dispatch({}) // refresh remote decorations after a peer edit
       }
 
-      onAware() {
-        this.view.dispatch({}) // a peer moved its cursor — recompute decorations
+      // A peer moved its cursor — redraw its marker. Our own selection updates arrive
+      // here too, from inside update(); dispatching then makes CodeMirror throw and
+      // shut this plugin off, which silently stopped every edit reaching the Y.Doc.
+      // So: ignore our own id, and redraw for peers after the current update finishes.
+      onAware(changedId) {
+        if (changedId === selfId || this.redrawQueued) return
+        this.redrawQueued = true
+        queueMicrotask(() => {
+          this.redrawQueued = false
+          if (!this.destroyed) this.view.dispatch({})
+        })
       }
 
       update(vu) {
@@ -125,6 +134,7 @@ export function createYjsBinding(ydoc, awareness) {
       }
 
       destroy() {
+        this.destroyed = true
         ytext.unobserve(this.observe)
         if (this.unsubAware) this.unsubAware()
         awareness?.set(selfId, null)
