@@ -15,6 +15,8 @@ import Explorer from './Explorer.jsx'
 import DraftsPane from './DraftsPane.jsx'
 import DiffView from './DiffView.jsx'
 import ToastHost from './Toast.jsx'
+import ScrapsView from './ScrapsView.jsx'
+import { revealScrap } from './scrapsExtension.js'
 import { OverviewPage, BookTextPage, PublishingPage, ArcPageView, BookGlance } from './BookPages.jsx'
 import { avatarColor, avatarInitial } from './avatar.js'
 import { stripGeneratorMarkers, chapterLabel, SECTION_ROOT } from '../project/format.js'
@@ -37,7 +39,7 @@ export default function Shell() {
     LeftView, SetLeftView, NewProject, OpenProject, OpenProjectPath, RecentProjects, BeginImport, Importing,
     OpenChapterById, OpenEntityById, EntityById, MentionsFor,
     CastForChapter, ChapterById, UpdateChapterMeta, SearchProject, TimelineChapters, CreateEntity,
-    AddAliasToEntity, ResolveMention, PreviewFor, Book, ArcNames,
+    AddAliasToEntity, ResolveMention, PreviewFor, Book, ArcNames, PendingScrapFocus, ClearScrapFocus,
     acquireChapterDoc, releaseChapterDoc, PromoteDocTab,
     ExportBook, RenderPreview, SetContainerApi, HandleContainerChange,
   } = useProject()
@@ -52,8 +54,17 @@ export default function Shell() {
   // chapter (via double-click) acquire the same doc and stay in sync.
   function ChapterView(props) {
     const [Handle, SetHandle] = createSignal(null)
+    const [View, SetView] = createSignal(null)
     onMount(() => SetHandle(acquireChapterDoc(props.file, props.docId)))
     onCleanup(() => releaseChapterDoc(props.file))
+    // "Show" on the scraps review page: select that scrap once this editor exists.
+    createEffect(() => {
+      const pending = PendingScrapFocus()
+      const view = View()
+      if (!pending || !view || pending.chapterId !== props.docId) return
+      ClearScrapFocus()
+      queueMicrotask(() => revealScrap(view, pending.scrapId))
+    })
     const info = () => ChapterById(props.docId)
     return (
       <Show when={Handle()}>
@@ -74,6 +85,9 @@ export default function Shell() {
           resolveMap={info()?.meta?.resolve || {}}
           onResolveMention={(form, id) => ResolveMention(props.docId, form, id)}
           previewFor={PreviewFor}
+          scraps={info()?.meta?.scraps || []}
+          onScrapsChange={(list) => UpdateChapterMeta(props.docId, 'scraps', list)}
+          ref={SetView}
         />
       </Show>
     )
@@ -109,6 +123,7 @@ export default function Shell() {
                 <Match when={CurrentDoc.kind === 'book' && CurrentDoc.id === 'publishing'}><PublishingPage onExport={openExport} /></Match>
                 <Match when={CurrentDoc.kind === 'arc'}><ArcPageView /></Match>
                 <Match when={CurrentDoc.kind === 'diff'}><DiffView /></Match>
+                <Match when={CurrentDoc.kind === 'scraps'}><ScrapsView /></Match>
               </Switch>
             )}
           </Show>
@@ -294,6 +309,7 @@ export default function Shell() {
     if (CurrentDoc.kind === 'book') return CurrentDoc.id === 'overview' ? Book.overview.meta.title || 'Overview' : BOOK_PAGE_NAMES[CurrentDoc.id]
     if (CurrentDoc.kind === 'arc') return CurrentDoc.id || 'Arc'
     if (CurrentDoc.kind === 'diff') return 'Drafts'
+    if (CurrentDoc.kind === 'scraps') return 'Scrapped text'
     if (CurrentDoc.kind === 'timeline') return 'Outline'
     return CurrentDoc.meta?.title || CurrentDoc.meta?.name || 'Untitled'
   }
@@ -303,6 +319,7 @@ export default function Shell() {
     if (kind === 'book') return 'Book'
     if (kind === 'diff') return CurrentDoc.id === 'blurb' || CurrentDoc.id === 'synopsis' ? 'Book' : 'Manuscript'
     if (kind === 'timeline') return 'Plot'
+    if (kind === 'scraps') return 'Notes'
     if (kind === 'bank') return 'Banks'
     return SECTION_NAMES[SECTION_OF_ROOT[CurrentDoc.root]] || 'World'
   }

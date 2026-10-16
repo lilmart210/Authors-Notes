@@ -157,7 +157,8 @@ const DRIVER_PRELUDE = String.raw`
   }
 `
 
-export function runE2E(driverBody, { budgetMs = 60000 } = {}) {
+// `screenshot`: also save a PNG of the page after the driver ran (a second run).
+export function runE2E(driverBody, { budgetMs = 60000, screenshot = null, size = '1440,900' } = {}) {
   const chrome = CHROME_PATHS.find((p) => fs.existsSync(p))
   if (!chrome) { console.error('No Chrome/Edge found for the headless run.'); process.exit(1) }
   execSync(`npx vite build --base=./ --outDir "${OUT_DIR}" --emptyOutDir --logLevel error`, { cwd: ROOT, stdio: 'inherit' })
@@ -170,6 +171,7 @@ export function runE2E(driverBody, { budgetMs = 60000 } = {}) {
   const pagePath = path.join(OUT_DIR, 'e2e.html')
   fs.writeFileSync(pagePath, page)
   const run = spawnSync(chrome, ['--headless=new', '--disable-gpu', '--allow-file-access-from-files', `--virtual-time-budget=${budgetMs}`, '--window-size=1440,900', '--dump-dom', pathToFileURL(pagePath).href], { encoding: 'utf8', maxBuffer: 200 * 1024 * 1024 })
+  if (screenshot) spawnSync(chrome, ['--headless=new', '--disable-gpu', '--allow-file-access-from-files', `--virtual-time-budget=${budgetMs}`, `--window-size=${size}`, `--screenshot=${screenshot}`, pathToFileURL(pagePath).href], { encoding: 'utf8' })
   const result = (run.stdout || '').match(/<pre id="e2e-result">([\s\S]*?)<\/pre>/)
   if (!result) { console.error('No result from the page.\n', (run.stderr || '').slice(-2000)); process.exit(1) }
   const text = result[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')

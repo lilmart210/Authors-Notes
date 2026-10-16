@@ -1,4 +1,4 @@
-import { onMount, onCleanup, Show } from 'solid-js'
+import { onMount, onCleanup, Show, For, createSignal, createEffect } from 'solid-js'
 import { EditorState } from '@codemirror/state'
 import {
   EditorView,
@@ -16,6 +16,11 @@ import {
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import { proseMarkings, selectionToolbar } from './marking.js'
 import { createYjsBinding } from './yjsBinding.js'
+import { scrapsExtension, restoreScrap, dismissScrap, revealScrap, addScrapBack } from './scrapsExtension.js'
+import { scrapContext, serializeScraps } from '../project/scraps.js'
+import { displayDate } from '../project/drafts.js'
+import { ScissorsIcon } from './icons.jsx'
+import { showToast } from './Toast.jsx'
 import { generatorToken } from '../project/format.js'
 import './Editor.css'
 
@@ -108,12 +113,25 @@ const PROSE_THEME = EditorView.theme({
  * @param {(type: string, text: string) => void} [props.onSaveAs] save selection as an entity
  * @param {(text: string) => void} [props.onLookup]  look up the selection
  * @param {number} [props.pageWidth]                 page-sheet width in px (Page view)
+ * @param {object[]} [props.scraps]                 chapter scraps — enables Scrap/Rewrite and the margin cards
+ * @param {(list: object[]) => void} [props.onScrapsChange] save the scraps (debounced)
+ * @param {string} [props.focusScrapId]              select a scrap's text once the editor opens
  */
 export default function Editor(props) {
   // 1. Refs
   let HostRef
   let EditorViewRef
   let YjsBindingRef
+  let ScrapMarginRef
+  let ScrapSaveTimer
+  let PendingScraps = null
+
+  // 2. Signals
+  const [Scraps, SetScraps] = createSignal(props.scraps || [])
+  const [ScrapTops, SetScrapTops] = createSignal({}) // scrap id → line top (px, document-relative)
+  const [DocTick, SetDocTick] = createSignal(0) // bumps on edits so card context stays current
+  const [OpenScrapId, SetOpenScrapId] = createSignal(null) // narrow layout: which marker is expanded
+  const hasScraps = () => props.scraps !== undefined
 
   // 3. onMount
   onMount(() => {
@@ -145,8 +163,10 @@ export default function Editor(props) {
       keymap.of(keys),
       PROSE_THEME,
       ...(YjsBindingRef ? YjsBindingRef.extensions : []),
+      ...(hasScraps() ? scrapsExtension({ initial: props.scraps, onChange: handleScrapsChange, onLayout: handleScrapLayout }) : []),
       EditorView.updateListener.of((update) => {
         if (!update.docChanged) return
+        if (Scraps().length) SetDocTick((tick) => tick + 1)
         if (useYjs) props.onEdit?.()
         else props.onChange?.(update.state.doc.toString())
       }),
@@ -155,15 +175,60 @@ export default function Editor(props) {
     const initialDoc = useYjs ? props.ydoc.getText('document').toString() : (props.doc ?? '')
     EditorViewRef = new EditorView({ state: EditorState.create({ doc: initialDoc, extensions }), parent: HostRef })
     props.ref?.(EditorViewRef)
+    if (props.focusScrapId) queueMicrotask(() => revealScrap(EditorViewRef, props.focusScrapId))
   })
 
   onCleanup(() => {
+    flushScraps()
     EditorViewRef?.destroy()
     YjsBindingRef?.destroy()
   })
 
+  // 4. Effects — stack margin cards so close scraps don't overlap (reads card
+  // heights after render; positions come from CodeMirror's line tops).
+  createEffect(() => {
+    const tops = ScrapTops()
+    Scraps()
+    DocTick()
+    if (!ScrapMarginRef) return
+    queueMicrotask(() => {
+      let bottom = -Infinity
+      const cards = [...ScrapMarginRef.querySelectorAll('.scrap')].sort((a, b) => (tops[a.dataset.scrap] ?? 0) - (tops[b.dataset.scrap] ?? 0))
+      for (const card of cards) {
+        const top = Math.max(tops[card.dataset.scrap] ?? 0, bottom + 8)
+        card.style.top = `${top}px`
+        bottom = top + card.offsetHeight
+      }
+    })
+  })
+
+  // 5. Handlers
+  function handleScrapsChange(list) {
+    SetScraps(list)
+    PendingScraps = list
+    clearTimeout(ScrapSaveTimer)
+    ScrapSaveTimer = setTimeout(flushScraps, 400)
+  }
+  function flushScraps() {
+    clearTimeout(ScrapSaveTimer)
+    if (PendingScraps) props.onScrapsChange?.(serializeScraps(PendingScraps))
+    PendingScraps = null
+  }
+  const handleScrapLayout = (layout) => SetScrapTops(Object.fromEntries(layout.map((entry) => [entry.id, entry.top])))
+  function handleDismiss(scrap) {
+    dismissScrap(EditorViewRef, scrap.id)
+    showToast('Scrap dismissed', () => addScrapBack(EditorViewRef, scrap))
+  }
+  const toggleMarker = (id) => SetOpenScrapId((current) => (current === id ? null : id))
+
   // 6. JSX-helper builders
-  const hostClass = () => `an-editor-host ${props.pageView ? 'page' : 'scroll'}`
+  const hostClass = () => `an-editor-host ${props.pageView ? 'page' : 'scroll'} ${hasScraps() ? 'with-margin' : ''}`
+  function contextOf(scrap) {
+    DocTick()
+    return scrapContext(EditorViewRef ? EditorViewRef.state.doc.toString() : '', scrap)
+  }
+  const awaitingRewrite = (scrap) => scrap.rewrite && !scrap.sealed && scrap.from === scrap.to
+  const scrapLabel = (scrap) => (scrap.rewrite ? 'Rewritten' : 'Scrapped')
 
   // 7. return JSX
   return (
@@ -180,7 +245,36 @@ export default function Editor(props) {
               </Show>
             </div>
           </Show>
-          <div class="cm-host" ref={HostRef} />
+          <div class="cm-margin-host">
+            <div class="cm-host" ref={HostRef} />
+            <Show when={hasScraps()}>
+              <div class="scrap-margin" ref={ScrapMarginRef}>
+                <For each={Scraps()}>
+                  {(scrap) => (
+                    <div class="scrap" classList={{ rw: scrap.rewrite, open: OpenScrapId() === scrap.id }} data-scrap={scrap.id}
+                      title="Show where it was" onClick={() => revealScrap(EditorViewRef, scrap.id)}>
+                      <button class="scrap-marker" title={`${scrapLabel(scrap)} text`} onClick={(e) => { e.stopPropagation(); toggleMarker(scrap.id) }}><ScissorsIcon size={13} /></button>
+                      <div class="scrap-body">
+                        <div class="scrap-h"><ScissorsIcon size={12} /><span>{scrapLabel(scrap)}</span><span class="scrap-date">{displayDate(scrap.date)}</span></div>
+                        <div class="scrap-flow">
+                          <span class="ctx">{contextOf(scrap).before}</span>
+                          <del>{scrap.text}</del>
+                          <Show when={contextOf(scrap).now} fallback={<Show when={awaitingRewrite(scrap)} fallback={' '}><span class="caretmark" title="Type the new version here" /></Show>}>
+                            <ins>{contextOf(scrap).now}</ins>
+                          </Show>
+                          <span class="ctx">{contextOf(scrap).after}</span>
+                        </div>
+                        <div class="scrap-a">
+                          <button class="scrap-btn" onClick={(e) => { e.stopPropagation(); restoreScrap(EditorViewRef, scrap.id) }}>Put back</button>
+                          <button class="scrap-btn dim" onClick={(e) => { e.stopPropagation(); handleDismiss(scrap) }}>Dismiss</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </For>
+              </div>
+            </Show>
+          </div>
         </div>
       </div>
     </div>

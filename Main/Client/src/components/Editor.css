@@ -290,3 +290,52 @@
   background: var(--border);
   margin: 3px 2px;
 }
+
+/* ---- Margin scraps (chapters) — cut text kept beside where it was ----
+   Wide editor: cards in a column left of the page (the page shifts right to
+   make room, decided by the editor's width — never by whether scraps exist).
+   Narrow editor: scissors markers in the page margin; click one to open it. */
+.editor-scroll { container-type: inline-size; }
+.cm-margin-host { position: relative; }
+.scrap-margin { position: absolute; top: 0; height: 0; width: 210px; right: calc(100% + 92px); }
+.an-editor-host.scroll .scrap-margin { right: calc(100% + 42px); }
+@container (min-width: 960px) {
+  .an-editor-host.page.with-margin .sheet { margin-left: 236px; }
+  .an-editor-host.scroll.with-margin .sheet { margin-left: max(260px, calc((100% - 44rem) / 2)); }
+}
+.scrap {
+  position: absolute; left: 0; right: 0;
+  background: var(--panel); color: var(--ink);
+  border: 1px solid var(--border); border-left: 3px solid var(--warn); border-radius: 8px;
+  padding: 8px 10px; cursor: pointer; transition: top .15s;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif; font-size: 12px; line-height: 1.45;
+}
+.scrap.rw { border-left-color: var(--accent); }
+.scrap:hover { border-color: var(--accent); }
+.scrap::after { content: ""; position: absolute; right: -19px; top: 13px; width: 18px; height: 1px; background: var(--border); }
+.scrap-marker { display: none; }
+.scrap-h { display: flex; align-items: center; gap: 5px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); margin-bottom: 4px; }
+.scrap-date { margin-left: auto; text-transform: none; letter-spacing: 0; color: var(--faint); font-variant-numeric: tabular-nums; }
+.scrap-flow {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, Cambria, serif; font-size: 12.5px; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; overflow: hidden;
+}
+.scrap-flow .ctx { color: var(--dim); }
+.scrap-flow del { color: var(--dim); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--warn) 70%, transparent); background: color-mix(in srgb, #c4384a 14%, transparent); border-radius: 2px; }
+.scrap-flow ins { text-decoration: none; background: color-mix(in srgb, var(--good) 22%, transparent); border-radius: 2px; }
+.caretmark { display: inline-block; width: 2px; height: 1.05em; background: var(--accent); vertical-align: -.15em; margin: 0 2px; }
+.scrap-a { display: flex; gap: 12px; margin-top: 6px; }
+.scrap-btn { background: transparent; border: 0; padding: 0; font: inherit; font-size: 11.5px; color: var(--link); cursor: pointer; }
+.scrap-btn:hover { text-decoration: underline; }
+.scrap-btn.dim { color: var(--faint); }
+@container (max-width: 959px) {
+  .scrap-margin { width: 26px; right: calc(100% + 40px); }
+  .an-editor-host.scroll .scrap-margin { right: calc(100% + 2px); }
+  .scrap { padding: 0; border: 0; background: transparent; }
+  .scrap::after { display: none; }
+  .scrap-marker { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--warn); cursor: pointer; padding: 0; }
+  .scrap.rw .scrap-marker { color: var(--accent); }
+  .scrap-body { display: none; }
+  .scrap.open { z-index: 6; }
+  .scrap.open .scrap-body { display: block; position: absolute; left: 32px; top: 0; width: 240px; background: var(--chrome); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; box-shadow: var(--shadow); }
+}

@@ -126,3 +126,5 @@
 .glance{ display:flex; flex-direction:column; gap:7px; font-size:12px; }
 .glance .grow{ display:flex; justify-content:space-between; gap:8px; color:var(--dim); font-variant-numeric:tabular-nums; }
 .glance .grow b{ color:var(--ink); font-weight:600; }
+.tbl td.scrap-review{ padding:9px 10px; white-space:normal; }
+.tbl td.scrap-review .scrap-flow{ -webkit-line-clamp:4; font-size:13.5px; }

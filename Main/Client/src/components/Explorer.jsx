@@ -5,7 +5,7 @@ import { draftState, stateLine, workingDraftNumber, canPublish } from '../projec
 import { showToast } from './Toast.jsx'
 import {
   ChevronDownIcon, ChevronRightIcon, PlusIcon, MoreIcon, FolderIcon, FileTextIcon, ArcIcon, QuoteIcon,
-  LinesIcon, GlobeIcon, TimelineIcon, GraphIcon, OpenIcon, PencilIcon, CopyIcon, TrashIcon, SendIcon, CompareIcon,
+  LinesIcon, GlobeIcon, TimelineIcon, ScissorsIcon, GraphIcon, OpenIcon, PencilIcon, CopyIcon, TrashIcon, SendIcon, CompareIcon,
 } from './icons.jsx'
 import './Explorer.css'
 
@@ -26,7 +26,7 @@ export default function Explorer() {
     Book, BookCoverUrl, OpenBookPage, PlanSummary,
     ArcNames, ArcChapters, OpenArc, CreateArc, RenameArc, DeleteArc,
     PagesIn, CreatePage, RenamePage, DeletePage, DuplicatePage, MovePage,
-    PublishDraft, OpenDiff, LoadDrafts, DraftList,
+    PublishDraft, OpenDiff, LoadDrafts, DraftList, AllScraps, OpenScraps,
   } = useProject()
 
   // 2. Signals
@@ -572,6 +572,13 @@ export default function Explorer() {
       </Section>
 
       <Section id="notes" addable pages>
+        <div class="node" classList={{ sel: CurrentDoc.kind === 'scraps' }} style={indent(1)} role="treeitem" tabindex="0"
+          onClick={() => OpenScraps()} onKeyDown={(e) => e.key === 'Enter' && OpenScraps()}>
+          <span class="tw" />
+          <ScissorsIcon size={15} class="ic" />
+          <span class="lbl">Scrapped text</span>
+          <Show when={AllScraps().length}><span class="tag">{AllScraps().length}</span></Show>
+        </div>
         <PageTree section="notes" />
       </Section>
 

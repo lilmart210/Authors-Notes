@@ -3,11 +3,12 @@
 // open), same-name clashes underline light-yellow (click to resolve), faint
 // italic `%` comment lines, `***` scene breaks rendered as a centered dinkus,
 // and resolved `/bank` generator tokens shown as a faint box (click to reroll).
-// Plus a selection toolbar (assign the selection to a card, or create one).
+// Plus the floating selection menu: Cut · Copy · Scrap · Rewrite · Assign to card · Look up.
 import { ViewPlugin, Decoration, WidgetType, EditorView, showTooltip, hoverTooltip } from '@codemirror/view'
 import { RangeSetBuilder, StateField, StateEffect } from '@codemirror/state'
 import { buildMentionMatcher, resolveMention } from '../project/mentions.js'
 import { GENERATOR_TOKEN_RE, generatorToken } from '../project/format.js'
+import { scrapField, scrapSelection } from './scrapsExtension.js'
 
 const COMMENT_LINE = Decoration.line({ class: 'cm-comment-line' })
 const DINKUS_LINE = Decoration.line({ class: 'cm-dinkus-line' })
@@ -430,24 +431,22 @@ export function selectionToolbar(handlers) {
     update(_value, tr) {
       const sel = tr.state.selection.main
       if (sel.empty) return null
-      const text = tr.state.sliceDoc(sel.from, sel.to)
-      if (!text.trim()) return null
+      if (!tr.state.sliceDoc(sel.from, sel.to).trim()) return null
       return {
         pos: sel.from,
         above: true,
         arrow: false,
-        create() {
+        create(view) {
           const dom = document.createElement('div')
           dom.className = 'cm-seltb'
-          const addButton = (label, onClick, plus) => {
+          // Read the selection at click time, not when the menu appeared.
+          const selected = () => {
+            const { from, to } = view.state.selection.main
+            return { from, to, text: view.state.sliceDoc(from, to) }
+          }
+          const addButton = (label, onClick) => {
             const button = document.createElement('button')
-            if (plus) {
-              const b = document.createElement('b')
-              b.textContent = '＋'
-              button.append(b, document.createTextNode(` ${label}`))
-            } else {
-              button.textContent = label
-            }
+            button.textContent = label
             // mousedown + preventDefault so the selection isn't cleared first.
             button.addEventListener('mousedown', (event) => {
               event.preventDefault()
@@ -455,22 +454,34 @@ export function selectionToolbar(handlers) {
             })
             return button
           }
-          // Primary: assign the selection to an existing card (searchable) or
-          // create a new one — the host opens the picker with this text.
-          const assign = addButton('Assign to card…', () => handlers.onAssign?.(text), false)
-          assign.classList.add('cm-seltb-primary')
-          dom.append(assign)
-          const divider = document.createElement('span')
-          divider.className = 'cm-seltb-div'
+          const divider = () => {
+            const line = document.createElement('span')
+            line.className = 'cm-seltb-div'
+            return line
+          }
+          const copyText = (text) => navigator.clipboard?.writeText(text)
           dom.append(
-            divider,
-            addButton('Character', () => handlers.onSaveAs?.('Character', text), true),
-            addButton('Location', () => handlers.onSaveAs?.('Location', text), true),
-            addButton('Term', () => handlers.onSaveAs?.('Term', text), true),
+            addButton('Cut', () => {
+              const { from, to, text } = selected()
+              Promise.resolve(copyText(text)).then(() => view.dispatch({ changes: { from, to, insert: '' }, userEvent: 'delete.cut' }), () => {})
+            }),
+            addButton('Copy', () => copyText(selected().text)),
           )
-          const divider2 = document.createElement('span')
-          divider2.className = 'cm-seltb-div'
-          dom.append(divider2, addButton('Look up', () => handlers.onLookup?.(text), false))
+          // Scrap / Rewrite only where the editor keeps scraps (chapters).
+          if (view.state.field(scrapField, false)) {
+            dom.append(
+              divider(),
+              addButton('Scrap', () => scrapSelection(view)),
+              addButton('Rewrite', () => scrapSelection(view, { rewrite: true })),
+            )
+          }
+          if (handlers.onAssign || handlers.onLookup) dom.append(divider())
+          if (handlers.onAssign) {
+            const assign = addButton('Assign to card…', () => handlers.onAssign(selected().text))
+            assign.classList.add('cm-seltb-primary')
+            dom.append(assign)
+          }
+          if (handlers.onLookup) dom.append(addButton('Look up', () => handlers.onLookup(selected().text)))
           return { dom }
         },
       }

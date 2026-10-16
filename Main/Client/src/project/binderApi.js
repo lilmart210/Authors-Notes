@@ -426,6 +426,23 @@ export function createBinderApi(ctx) {
     return CreatePage(null, folderId, name, { fields })
   }
 
+  // ------------------------------------------------------------------ Scraps
+  // Every chapter's scraps, for the review page: [{ chapter, scrap }] in reading order.
+  function AllScraps() {
+    const order = ArcNames().flatMap((name) => ArcChapters(name)).concat(ArcChapters(''))
+    return order.flatMap((chapter) => (chapter.meta?.scraps || []).map((scrap) => ({ chapter, scrap })))
+  }
+  function OpenScraps(options) {
+    openTabFor({ key: 'scraps', dkind: 'scraps', docId: '__scraps__', file: null, title: 'Scrapped text' }, options)
+  }
+  // Open a chapter at a scrap: the chapter's editor picks this up and selects it.
+  const [PendingScrapFocus, SetPendingScrapFocus] = createSignal(null) // { chapterId, scrapId }
+  function FocusScrap(chapterId, scrapId) {
+    SetPendingScrapFocus({ chapterId, scrapId })
+    ctx.OpenChapterById(chapterId)
+  }
+  const ClearScrapFocus = () => SetPendingScrapFocus(null)
+
   // Everything pending in this module, written now.
   function flushBinder() {
     flushBook()
@@ -447,6 +464,8 @@ export function createBinderApi(ctx) {
     ArcNames, ArcPage, ArcChapters, PlanSummary, UpdateArc, CreateArc, RenameArc, DeleteArc, OpenArc,
     // pages
     PagesIn, PageChildren, ColumnsOf, FieldsOf, LinkedFrom, PageNamed, RetitlePageTabs, CanGenerate, GeneratePageIn, CreatePage, AddPagesTo, RenamePage, UpdatePageMeta, DeletePage, DuplicatePage, MovePage,
+    // scraps
+    AllScraps, OpenScraps, FocusScrap, PendingScrapFocus, ClearScrapFocus,
     // lifecycle (used by ProjectContext)
     loadBinder, flushBinder,
   }

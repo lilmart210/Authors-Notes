@@ -257,6 +257,8 @@ export function ProjectProvider(props) {
       SetCurrentDoc({ kind: 'graph', id: '__graph__', file: null, meta: null, body: '' })
     } else if (tab.dkind === 'book') {
       SetCurrentDoc({ kind: 'book', id: tab.docId, file: null, root: null, meta: null, body: '' })
+    } else if (tab.dkind === 'scraps') {
+      SetCurrentDoc({ kind: 'scraps', id: '__scraps__', file: null, root: null, meta: null, body: '' })
     } else if (tab.dkind === 'arc') {
       SetCurrentDoc({ kind: 'arc', id: tab.docId, file: null, root: null, meta: null, body: '' })
     } else if (tab.dkind === 'diff') {
@@ -1050,7 +1052,7 @@ export function ProjectProvider(props) {
   const binder = createBinderApi({
     Project, trackSave, openTabFor, closeTabsWhere, retitleTabs, flushSave, forgetDocs, CurrentDoc,
     ChapterBodies, ChapterById, UpdateChapterMeta, ReplaceChapterBody, ArcBands,
-    Cards, SetCards, reloadCards, OpenEntityById, UpdateMeta, Banks, MembersOf,
+    Cards, SetCards, reloadCards, OpenEntityById, UpdateMeta, Banks, MembersOf, OpenChapterById,
   })
 
   const projectApi = {
