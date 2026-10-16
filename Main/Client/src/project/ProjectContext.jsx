@@ -1050,7 +1050,7 @@ export function ProjectProvider(props) {
   const binder = createBinderApi({
     Project, trackSave, openTabFor, closeTabsWhere, retitleTabs, flushSave, forgetDocs, CurrentDoc,
     ChapterBodies, ChapterById, UpdateChapterMeta, ReplaceChapterBody, ArcBands,
-    Cards, SetCards, reloadCards, OpenEntityById, UpdateMeta,
+    Cards, SetCards, reloadCards, OpenEntityById, UpdateMeta, Banks, MembersOf,
   })
 
   const projectApi = {

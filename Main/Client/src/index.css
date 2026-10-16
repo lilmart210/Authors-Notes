@@ -454,3 +454,4 @@ body{ background:var(--bg); color:var(--ink); overflow:hidden;
 .topic:hover .topic-del{ opacity:1; }
 .topic-del:hover{ color:#d05a68; }
 .dock .stagebox{ border-bottom:1px solid var(--border2); }
+.panel-error{ padding:24px; color:#d05a68; font-size:13px; }

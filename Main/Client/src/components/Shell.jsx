@@ -1,11 +1,10 @@
-import { For, Show, Switch, Match, createSignal, createEffect, onMount, onCleanup } from 'solid-js'
+import { For, Show, Switch, Match, ErrorBoundary, createSignal, createEffect, onMount, onCleanup } from 'solid-js'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { SplitContainer, useTab } from '@curruptnation/split-container'
 import '@curruptnation/split-container/styles.css'
 import { useProject } from '../project/ProjectContext.jsx'
 import Editor from './Editor.jsx'
-import EntityPage from './EntityPage.jsx'
-import GroupPage from './GroupPage.jsx'
+import PageDocument, { PageDock } from './PageView.jsx' // (PageView is the page/scroll signal below)
 import CastBrowser from './CastBrowser.jsx'
 import BanksBrowser from './BanksBrowser.jsx'
 import BankPage from './BankPage.jsx'
@@ -80,10 +79,17 @@ export default function Shell() {
     )
   }
 
+  // A page that throws while rendering shows the error instead of a blank panel.
+  function PanelError(err) {
+    console.error(err)
+    return <div class="panel-error">This page couldn’t be shown: {String(err?.message || err)}</div>
+  }
+
   // Rendered once PER TAB (each tab's own Panel), so panes are independent.
   function DocPanel() {
     const { Tab } = useTab()
     return (
+      <ErrorBoundary fallback={PanelError}>
       <Switch>
         <Match when={Tab.dkind === 'chapter'}>
           <Show when={Tab.docId} keyed>
@@ -94,8 +100,7 @@ export default function Shell() {
           <Show when={CurrentDoc.id} keyed>
             {() => (
               <Switch>
-                <Match when={CurrentDoc.kind === 'entity'}><EntityPage /></Match>
-                <Match when={CurrentDoc.kind === 'group'}><GroupPage /></Match>
+                <Match when={CurrentDoc.kind === 'entity' || CurrentDoc.kind === 'group'}><PageDocument /></Match>
                 <Match when={CurrentDoc.kind === 'bank'}><BankPage /></Match>
                 <Match when={CurrentDoc.kind === 'timeline'}><TimelineView /></Match>
                 <Match when={CurrentDoc.kind === 'graph'}><RelationshipGraph /></Match>
@@ -109,6 +114,7 @@ export default function Shell() {
           </Show>
         </Match>
       </Switch>
+      </ErrorBoundary>
     )
   }
   function handleContainerReady(api) {
@@ -604,38 +610,8 @@ export default function Shell() {
                     <BookGlance />
                   </Match>
 
-                  <Match when={CurrentDoc.kind === 'entity'}>
-                    <div class="pane plan">
-                      <div class="pbar"><span class="t">Mentions</span><span class="sub">{docMentionTotal()} across {MentionsFor(CurrentDoc.id).length}</span></div>
-                      <div class="pbody">
-                        <For each={MentionsFor(CurrentDoc.id)} fallback={<div class="dock-empty">Not mentioned in any chapter yet.</div>}>
-                          {(hit) => (
-                            <button class="dock-mrow" onClick={() => OpenChapterById(hit.chapterId)}>
-                              <span class="dock-mtick"></span>
-                              <span class="dock-msrc">{hit.title}</span>
-                              <span class="dock-mct">{hit.count}×</span>
-                            </button>
-                          )}
-                        </For>
-                      </div>
-                    </div>
-                  </Match>
-                  <Match when={CurrentDoc.kind === 'group'}>
-                    <div class="pane plan">
-                      <div class="pbar"><span class="t">Members</span><span class="sub">{(CurrentDoc.meta?.members || []).length}</span></div>
-                      <div class="pbody">
-                        <div class="clist">
-                          <For each={CurrentDoc.meta?.members || []} fallback={<div class="dock-empty">No members yet.</div>}>
-                            {(id) => (
-                              <div class="card" onClick={() => OpenEntityById(id)}>
-                                <div class="av" style={{ background: avatarColor(id) }}>{avatarInitial(EntityById(id)?.meta.name)}</div>
-                                <div class="who"><div class="nm">{EntityById(id)?.meta.name || 'Unknown'}</div></div>
-                              </div>
-                            )}
-                          </For>
-                        </div>
-                      </div>
-                    </div>
+                  <Match when={CurrentDoc.kind === 'entity' || CurrentDoc.kind === 'group'}>
+                    <PageDock />
                   </Match>
                 </Switch>
               }

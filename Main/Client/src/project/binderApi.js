@@ -12,15 +12,10 @@ import * as format from './format.js'
 import * as book from './book.js'
 import * as drafts from './drafts.js'
 import * as docSync from './docSync.js'
+import * as pages from './pages.js'
 
 const SAVE_DELAY_MS = 1500
 const IMAGE_FILTER = [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'] }]
-
-// Frontmatter keys with a fixed meaning — everything else on a page is a field.
-export const RESERVED_PAGE_KEYS = new Set([
-  'id', 'name', 'type', 'aliases', 'status', 'relationships', 'members', 'attributes', 'memberRule',
-  'media', 'portrait', 'order', 'sections', 'columns', 'summary', 'inherits', 'introduces', 'lastDraft',
-])
 
 const blankPage = (page) => ({ meta: book.defaultBookMeta(page), body: '' })
 
@@ -28,7 +23,7 @@ export function createBinderApi(ctx) {
   const {
     Project, trackSave, openTabFor, closeTabsWhere, retitleTabs, flushSave, forgetDocs, CurrentDoc,
     ChapterBodies, ChapterById, UpdateChapterMeta, ReplaceChapterBody, ArcBands,
-    Cards, reloadCards, OpenEntityById, UpdateMeta,
+    Cards, reloadCards, OpenEntityById, UpdateMeta, Banks,
   } = ctx
 
   // ---------------------------------------------------------------- Book pages
@@ -246,6 +241,17 @@ export function createBinderApi(ctx) {
   // Pages directly under a parent (or at the top of a tree when parentId is null).
   const PagesIn = (root, parentId) => Cards().filter((c) => c.root === root && (c.parentId ?? null) === (parentId ?? null)).sort(byOrder)
 
+  // What a page holds: its sub-pages, plus (old collections) its members.
+  function PageChildren(id) {
+    const card = findCard(id)
+    if (!card) return []
+    const children = PagesIn(card.root, id)
+    if (card.meta.type !== 'group' || !ctx.MembersOf) return children
+    const seen = new Set(children.map((c) => c.meta.id))
+    const members = ctx.MembersOf(card.meta).map(findCard).filter((m) => m && !seen.has(m.meta.id))
+    return [...children, ...members.sort((a, b) => String(a.meta.name).localeCompare(String(b.meta.name)))]
+  }
+
   // A folder's table columns: its own, else the nearest ancestor's, else (old
   // collections) its per-member attribute keys.
   function ColumnsOf(card) {
@@ -260,7 +266,7 @@ export function createBinderApi(ctx) {
     return []
   }
   // A page's own fields, in file order: [[key, value]].
-  const FieldsOf = (card) => Object.entries(card?.meta || {}).filter(([key]) => !RESERVED_PAGE_KEYS.has(key))
+  const FieldsOf = (card) => pages.pageFields(card?.meta)
 
   function nextOrder(root, parentId) {
     const orders = PagesIn(root, parentId).map((c) => c.meta.order).filter((n) => typeof n === 'number')
@@ -313,14 +319,28 @@ export function createBinderApi(ctx) {
     await reloadCards()
   }
 
-  // Set one frontmatter value on any page (open or not).
-  async function UpdatePageMeta(id, key, value) {
+  // Set one frontmatter value on any page (open or not). The open page goes
+  // through the normal autosave; others are written after a short pause, so
+  // typing in a table cell doesn't hit the disk on every keystroke.
+  const pageTimers = new Map()
+  function savePageSoon(id) {
+    clearTimeout(pageTimers.get(id))
+    pageTimers.set(id, setTimeout(() => savePageNow(id), SAVE_DELAY_MS))
+  }
+  function savePageNow(id) {
+    clearTimeout(pageTimers.get(id))
+    pageTimers.delete(id)
+    const card = findCard(id)
+    if (card) savePageMeta(card, unwrap(card.meta))
+  }
+  function UpdatePageMeta(id, key, value) {
     if (CurrentDoc.id === id) { UpdateMeta(key, value); return }
     const card = findCard(id)
     if (!card) return
     const meta = { ...unwrap(card.meta), [key]: value }
+    if (value === undefined) delete meta[key]
     ctx.SetCards((list) => list.map((c) => (c.meta.id === id ? { ...c, meta } : c)))
-    await savePageMeta(card, meta)
+    savePageSoon(id)
   }
 
   // Delete a page and everything inside it. Returns an undo function.
@@ -379,10 +399,38 @@ export function createBinderApi(ctx) {
     await reloadCards()
   }
 
+  // Every other page that points at this one (a field naming it, or a mention).
+  const LinkedFrom = (id) => (findCard(id) ? pages.linkedFrom(Cards(), findCard(id)) : [])
+  const PageNamed = (text) => pages.findPageByName(Cards(), text)
+  const RetitlePageTabs = (id, name) => retitleTabs(`e:${id}`, name || 'Untitled')
+
+  // "Generate from banks": a new page in a folder, named from the surname /
+  // given-name banks, each column filled from a bank with the same name.
+  const NAME_BANKS = { surname: ['surnames', 'surname'], given: ['given-names', 'given names', 'givennames', 'names', 'given'] }
+  const bankNamed = (names) => Banks().find((bank) => names.includes(bank.name.toLowerCase()) && bank.entries.length)
+  const roll = (bank) => bank.entries[Math.floor(Math.random() * bank.entries.length)]
+  const CanGenerate = () => Boolean(bankNamed(NAME_BANKS.surname) || bankNamed(NAME_BANKS.given))
+  async function GeneratePageIn(folderId) {
+    const folder = findCard(folderId)
+    if (!folder) return null
+    const fixedSurname = (folder.meta.attributes || []).find((a) => a.mode === 'fixed' && /surname/i.test(a.key))?.value
+    const surname = fixedSurname || (bankNamed(NAME_BANKS.surname) ? roll(bankNamed(NAME_BANKS.surname)) : '')
+    const given = bankNamed(NAME_BANKS.given) ? roll(bankNamed(NAME_BANKS.given)) : ''
+    const name = [surname, given].filter(Boolean).join(' ')
+    if (!name) return null
+    const fields = {}
+    for (const column of ColumnsOf(folder)) {
+      const bank = Banks().find((b) => b.name.toLowerCase() === column.toLowerCase() && b.entries.length)
+      if (bank) fields[column] = roll(bank)
+    }
+    return CreatePage(null, folderId, name, { fields })
+  }
+
   // Everything pending in this module, written now.
   function flushBinder() {
     flushBook()
     flushArcs()
+    for (const id of [...pageTimers.keys()]) savePageNow(id)
   }
 
   async function loadBinder() {
@@ -398,7 +446,7 @@ export function createBinderApi(ctx) {
     // arcs
     ArcNames, ArcPage, ArcChapters, PlanSummary, UpdateArc, CreateArc, RenameArc, DeleteArc, OpenArc,
     // pages
-    PagesIn, ColumnsOf, FieldsOf, CreatePage, AddPagesTo, RenamePage, UpdatePageMeta, DeletePage, DuplicatePage, MovePage,
+    PagesIn, PageChildren, ColumnsOf, FieldsOf, LinkedFrom, PageNamed, RetitlePageTabs, CanGenerate, GeneratePageIn, CreatePage, AddPagesTo, RenamePage, UpdatePageMeta, DeletePage, DuplicatePage, MovePage,
     // lifecycle (used by ProjectContext)
     loadBinder, flushBinder,
   }
