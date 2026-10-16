@@ -40,6 +40,10 @@ function readFixture(dir) {
 // --- the Tauri stand-in: fs + dialog + events + window, over an in-memory disk ---
 const TAURI_MOCK = String.raw`
 (() => {
+  // Headless --dump-dom runs no rendering loop, so animation frames never come
+  // (and Web Animations never finish). Tick frames on a timer, about 60 a second.
+  window.requestAnimationFrame = (callback) => setTimeout(() => callback(performance.now()), 16)
+  window.cancelAnimationFrame = (id) => clearTimeout(id)
   const files = new Map(Object.entries(window.__FIXTURE__))
   const original = new Set(files.keys())
   const dirs = new Set()

@@ -5,6 +5,7 @@ import { draftState } from '../project/drafts.js'
 import { OpenIcon, CheckCircleIcon, PlusIcon, CircleIcon, ArcIcon } from './icons.jsx'
 import EntitySelect from './EntitySelect.jsx'
 import { DraftChip } from './DraftsPane.jsx'
+import Reveal, { morph } from './Reveal.jsx'
 import './TimelineView.css'
 import './Drafts.css'
 
@@ -15,6 +16,10 @@ export default function TimelineView() {
     TimelineChapters, OpenChapterById, OpenEntityById, UpdateChapterMeta, DeleteChapters, MentionsFor,
     AddChapter, nextChapterNumber, AddIntroducesToChapter, RemoveIntroducesFromChapter, ChapterById, OpenArc,
   } = useProject()
+
+  // 1. Refs
+  let root
+  let switchingCard = false // a card is mid-animation between reading and editing
 
   // 2. Signals
   const [EditingId, SetEditingId] = createSignal(null) // card in edit mode
@@ -45,7 +50,17 @@ export default function TimelineView() {
   const bandKeys = () => bands().map((band) => band.key)
 
   // 5. Handlers
-  const toggleEdit = (id) => SetEditingId((current) => (current === id ? null : id))
+  // Open a card's plan for editing (closing any other), animating both cards.
+  function toggleEdit(id) {
+    if (switchingCard) return
+    const previous = EditingId()
+    const next = previous === id ? null : id
+    const planOf = (cardId) => root.querySelector(`.tl-node[data-id="${cardId}"] .tl-planwrap`)
+    const wraps = () => [...new Set([previous, next])].filter(Boolean).map(planOf)
+    const contents = () => wraps().map((wrap) => wrap?.firstElementChild)
+    switchingCard = true
+    morph({ boxes: wraps, apply: () => SetEditingId(next), fadeOut: contents(), fadeIn: contents, done: () => { switchingCard = false } })
+  }
   const toggleArc = (name) => SetArcOpen((open) => ({ ...open, [name]: !arcOpen(name) }))
   const addPlanned = (arc) => AddChapter({ number: nextChapterNumber(), title: '', open: false, ...(arc !== undefined ? { arc } : {}) })
   const stop = (e) => e.stopPropagation()
@@ -92,7 +107,7 @@ export default function TimelineView() {
     const chapter = () => chaptersById().get(id)
     return (
       <Show when={chapter()}>
-        <div class="tl-node" classList={{ planned: isPlanned(id), sel: editing(id) }} onClick={() => toggleEdit(id)}>
+        <div class="tl-node" data-id={id} classList={{ planned: isPlanned(id), sel: editing(id) }} onClick={() => toggleEdit(id)}>
           <div class={`tl-dot ${stateOf(id)}`}></div>
           <div class="tl-card">
             <div class="tl-chead">
@@ -110,55 +125,57 @@ export default function TimelineView() {
             <Show when={conflicted(chapter())}><div class="tl-warn">⚠ chapter #{chapter().number} is used more than once</div></Show>
 
             {/* Plan — always visible; read-only until the card is clicked into edit mode. */}
-            <Show
-              when={editing(id)}
-              fallback={
-                <div class="tl-planread">
-                  <Show when={chapter().summary}><div class="tl-syn">{chapter().summary}</div></Show>
-                  <Show when={chapter().objective}><div class="tl-readfield"><span class="tl-readlab">Objective</span> {chapter().objective}</div></Show>
-                  <Show when={chapter().timeline}><div class="tl-readfield"><span class="tl-readlab">Timeline</span> {chapter().timeline}</div></Show>
-                  <Show when={chapter().topics.length}>
-                    <div class="tl-topics">
-                      <Index each={chapter().topics}>
-                        {(topic) => <div class="tl-topic" classList={{ done: topic().done }}><span class="tl-topicdot"></span>{topic().title}<Show when={topic().note}><span class="tl-topicnote"> — {topic().note}</span></Show></div>}
-                      </Index>
-                    </div>
-                  </Show>
-                </div>
-              }
-            >
-              <div class="tl-plan" onClick={stop}>
-                <div class="tl-planrow">
-                  <div class="tl-planfield tl-num"><label>Chapter #</label>
-                    <input type="number" step="0.1" value={chapter().number ?? ''} onInput={(e) => UpdateChapterMeta(id, 'number', e.currentTarget.value === '' ? null : Number(e.currentTarget.value))} /></div>
-                  <div class="tl-planfield tl-titlef"><label>Title</label>
-                    <input value={chapter().title || ''} placeholder="Untitled" onInput={(e) => UpdateChapterMeta(id, 'title', e.currentTarget.value)} /></div>
-                </div>
-                <label>Summary</label>
-                <textarea rows="2" value={chapter().summary} placeholder="What happens in this chapter" onInput={(e) => UpdateChapterMeta(id, 'summary', e.currentTarget.value)} />
-                <label>Objective</label>
-                <textarea rows="2" value={chapter().objective} placeholder="What it needs to accomplish" onInput={(e) => UpdateChapterMeta(id, 'objective', e.currentTarget.value)} />
-                <label>Timeline note</label>
-                <textarea rows="2" value={chapter().timeline} placeholder="This chapter's timeline note" onInput={(e) => UpdateChapterMeta(id, 'timeline', e.currentTarget.value)} />
-                <div class="tl-toplabel"><label>Topics</label><button class="tl-topadd" onClick={() => addTopic(chapter())}><PlusIcon size={12} /> Add</button></div>
-                <div class="tl-topics">
-                  <Index each={chapter().topics}>
-                    {(topic, index) => (
-                      <div class="tl-topicedit" classList={{ done: topic().done }}>
-                        <button class="tl-topicmark" title="Mark done" onClick={() => editTopic(chapter(), index, { done: !topic().done })}>{topic().done ? <CheckCircleIcon size={14} /> : <CircleIcon size={14} />}</button>
-                        <input class="tl-topicin tt" value={topic().title} onInput={(e) => editTopic(chapter(), index, { title: e.currentTarget.value })} />
-                        <input class="tl-topicin td" placeholder="note" value={topic().note} onInput={(e) => editTopic(chapter(), index, { note: e.currentTarget.value })} />
-                        <button class="tl-topicx" title="Remove" onClick={() => removeTopic(chapter(), index)}>×</button>
+            <div class="tl-planwrap">
+              <Show
+                when={editing(id)}
+                fallback={
+                  <div class="tl-planread">
+                    <Show when={chapter().summary}><div class="tl-syn">{chapter().summary}</div></Show>
+                    <Show when={chapter().objective}><div class="tl-readfield"><span class="tl-readlab">Objective</span> {chapter().objective}</div></Show>
+                    <Show when={chapter().timeline}><div class="tl-readfield"><span class="tl-readlab">Timeline</span> {chapter().timeline}</div></Show>
+                    <Show when={chapter().topics.length}>
+                      <div class="tl-topics">
+                        <Index each={chapter().topics}>
+                          {(topic) => <div class="tl-topic" classList={{ done: topic().done }}><span class="tl-topicdot"></span>{topic().title}<Show when={topic().note}><span class="tl-topicnote"> — {topic().note}</span></Show></div>}
+                        </Index>
                       </div>
-                    )}
-                  </Index>
+                    </Show>
+                  </div>
+                }
+              >
+                <div class="tl-plan" onClick={stop}>
+                  <div class="tl-planrow">
+                    <div class="tl-planfield tl-num"><label>Chapter #</label>
+                      <input type="number" step="0.1" value={chapter().number ?? ''} onInput={(e) => UpdateChapterMeta(id, 'number', e.currentTarget.value === '' ? null : Number(e.currentTarget.value))} /></div>
+                    <div class="tl-planfield tl-titlef"><label>Title</label>
+                      <input value={chapter().title || ''} placeholder="Untitled" onInput={(e) => UpdateChapterMeta(id, 'title', e.currentTarget.value)} /></div>
+                  </div>
+                  <label>Summary</label>
+                  <textarea rows="2" value={chapter().summary} placeholder="What happens in this chapter" onInput={(e) => UpdateChapterMeta(id, 'summary', e.currentTarget.value)} />
+                  <label>Objective</label>
+                  <textarea rows="2" value={chapter().objective} placeholder="What it needs to accomplish" onInput={(e) => UpdateChapterMeta(id, 'objective', e.currentTarget.value)} />
+                  <label>Timeline note</label>
+                  <textarea rows="2" value={chapter().timeline} placeholder="This chapter's timeline note" onInput={(e) => UpdateChapterMeta(id, 'timeline', e.currentTarget.value)} />
+                  <div class="tl-toplabel"><label>Topics</label><button class="tl-topadd" onClick={() => addTopic(chapter())}><PlusIcon size={12} /> Add</button></div>
+                  <div class="tl-topics">
+                    <Index each={chapter().topics}>
+                      {(topic, index) => (
+                        <div class="tl-topicedit" classList={{ done: topic().done }}>
+                          <button class="tl-topicmark" title="Mark done" onClick={() => editTopic(chapter(), index, { done: !topic().done })}>{topic().done ? <CheckCircleIcon size={14} /> : <CircleIcon size={14} />}</button>
+                          <input class="tl-topicin tt" value={topic().title} onInput={(e) => editTopic(chapter(), index, { title: e.currentTarget.value })} />
+                          <input class="tl-topicin td" placeholder="note" value={topic().note} onInput={(e) => editTopic(chapter(), index, { note: e.currentTarget.value })} />
+                          <button class="tl-topicx" title="Remove" onClick={() => removeTopic(chapter(), index)}>×</button>
+                        </div>
+                      )}
+                    </Index>
+                  </div>
+                  <div class="tl-planfoot">
+                    <button class="tl-opennote" onClick={() => OpenChapterById(id)}>Open chapter ›</button>
+                    <button class="tl-delete" onClick={() => SetConfirmDeleteId(id)}>Delete chapter</button>
+                  </div>
                 </div>
-                <div class="tl-planfoot">
-                  <button class="tl-opennote" onClick={() => OpenChapterById(id)}>Open chapter ›</button>
-                  <button class="tl-delete" onClick={() => SetConfirmDeleteId(id)}>Delete chapter</button>
-                </div>
-              </div>
-            </Show>
+              </Show>
+            </div>
 
             {/* Introduces — always interactive. */}
             <div class="tl-intro">
@@ -190,7 +207,7 @@ export default function TimelineView() {
 
   // 7. JSX
   return (
-    <div class="tl">
+    <div class="tl" ref={root}>
       <div class="tl-inner">
         <div class="tl-bar">
           <div class="tl-title">Outline</div>
@@ -215,14 +232,14 @@ export default function TimelineView() {
                     <span class="tl-band-ct">{band().ids.length}</span>
                   </div>
                 </Show>
-                <Show when={!band().arc || arcOpen(band().arc)}>
+                <Reveal when={!band().arc || arcOpen(band().arc)}>
                   <div class="tl-spine">
                     <For each={band().ids}>{(id) => <ChapterNode id={id} />}</For>
                     <Show when={band().arc && !FilterEntity()}>
                       <button class="addrow tl-addinarc" onClick={() => addPlanned(band().arc)}><PlusIcon size={13} /> Planned chapter</button>
                     </Show>
                   </div>
-                </Show>
+                </Reveal>
               </>
             )
           }}

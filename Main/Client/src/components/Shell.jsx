@@ -21,6 +21,7 @@ import { OverviewPage, BookTextPage, PublishingPage, ArcPageView, BookGlance } f
 import { avatarColor, avatarInitial } from './avatar.js'
 import { stripGeneratorMarkers, chapterLabel, SECTION_ROOT } from '../project/format.js'
 import ExportDialog from './ExportDialog.jsx'
+import { togglePane } from './Reveal.jsx'
 import {
   FilesIcon, SearchIcon, UsersIcon, DatabaseIcon, SparkleIcon, SettingsIcon, PageIcon, ScrollIcon,
   ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, CircleIcon, CheckCircleIcon,
@@ -528,7 +529,7 @@ export default function Shell() {
                     </div>
 
                     <div class="pane cast" classList={{ collapsed: !CastOpen() }}>
-                      <div class="pbar" onClick={() => SetCastOpen((v) => !v)}>
+                      <div class="pbar" onClick={(e) => togglePane(e.currentTarget.parentElement, () => SetCastOpen((v) => !v))}>
                         <span class="cx">{CastOpen() ? <ChevronDownIcon size={14} /> : <ChevronRightIcon size={14} />}</span>
                         <span class="t">Cast in chapter</span><span class="sub">recent · most used</span>
                       </div>
@@ -554,7 +555,7 @@ export default function Shell() {
                     </div>
 
                     <div class="pane plan" classList={{ collapsed: !PlanOpen() }}>
-                      <div class="pbar" onClick={() => SetPlanOpen((v) => !v)}>
+                      <div class="pbar" onClick={(e) => togglePane(e.currentTarget.parentElement, () => SetPlanOpen((v) => !v))}>
                         <span class="cx">{PlanOpen() ? <ChevronDownIcon size={14} /> : <ChevronRightIcon size={14} />}</span>
                         <span class="t">Chapter plan</span>
                       </div>
@@ -575,7 +576,7 @@ export default function Shell() {
                     </div>
 
                     <div class="pane plan" classList={{ collapsed: !TopicsOpen() }}>
-                      <div class="pbar" onClick={() => SetTopicsOpen((v) => !v)}>
+                      <div class="pbar" onClick={(e) => togglePane(e.currentTarget.parentElement, () => SetTopicsOpen((v) => !v))}>
                         <span class="cx">{TopicsOpen() ? <ChevronDownIcon size={14} /> : <ChevronRightIcon size={14} />}</span>
                         <span class="t">Topics</span>
                         <button class="add" onClick={(e) => { e.stopPropagation(); addTopic() }}><PlusIcon size={12} /> Add</button>

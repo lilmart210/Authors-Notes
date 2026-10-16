@@ -1,6 +1,7 @@
 import { For, Show, createSignal } from 'solid-js'
 import { useProject } from '../project/ProjectContext.jsx'
 import { ChevronDownIcon, ChevronRightIcon, OpenIcon, PlusIcon } from './icons.jsx'
+import Reveal from './Reveal.jsx'
 
 // The story-bible collection tree, shared by the Explorer and the Cast rail so
 // both are organized the same way. Renders a fragment of `.node` rows (the caller
@@ -43,9 +44,9 @@ export default function BibleTree(props) {
             <Show when={isGroup()}><button class="nodebtn" title="New member in this collection" onClick={(e) => { e.stopPropagation(); newMember(ent().meta.id) }}><PlusIcon size={14} /></button></Show>
           </span>
         </button>
-        <Show when={hasKids() && isOpen(ent().meta.id) && np.depth < 8}>
+        <Reveal when={hasKids() && isOpen(ent().meta.id) && np.depth < 8}>
           <For each={kids()}>{(m) => <Node entity={m} depth={np.depth + 1} />}</For>
-        </Show>
+        </Reveal>
       </>
     )
   }

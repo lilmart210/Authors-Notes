@@ -3,6 +3,7 @@ import { useProject } from '../project/ProjectContext.jsx'
 import { chapterLabel, stripGeneratorMarkers, SECTION_ROOT } from '../project/format.js'
 import { draftState, stateLine, workingDraftNumber, canPublish } from '../project/drafts.js'
 import { showToast } from './Toast.jsx'
+import Reveal from './Reveal.jsx'
 import {
   ChevronDownIcon, ChevronRightIcon, PlusIcon, MoreIcon, FolderIcon, FileTextIcon, ArcIcon, QuoteIcon,
   LinesIcon, GlobeIcon, TimelineIcon, ScissorsIcon, GraphIcon, OpenIcon, PencilIcon, CopyIcon, TrashIcon, SendIcon, CompareIcon,
@@ -367,10 +368,10 @@ export default function Explorer() {
             <button class="nodebtn" title="More" onClick={(e) => openMenu(e, pageItems(card(), props.section))}><MoreIcon size={14} /></button>
           </span>
         </div>
-        <Show when={hasKids() && open() && props.depth < 10}>
+        <Reveal when={hasKids() && open() && props.depth < 10}>
           <For each={kids()}>{(child) => <PageRow card={child} depth={props.depth + 1} section={props.section} />}</For>
           <Show when={creatingHere()}><CreatingRow depth={props.depth + 1} /></Show>
-        </Show>
+        </Reveal>
       </>
     )
   }
@@ -437,9 +438,9 @@ export default function Explorer() {
             <button class="nodebtn" title="More" onClick={(e) => openMenu(e, arcItems(props.name))}><MoreIcon size={14} /></button>
           </span>
         </div>
-        <Show when={open()}>
+        <Reveal when={open()}>
           <For each={chapterRows(props.name)}>{(chapter) => <ChapterRow chapter={chapter} depth={2} />}</For>
-        </Show>
+        </Reveal>
       </>
     )
   }
@@ -463,9 +464,9 @@ export default function Explorer() {
             <button class="nodebtn" title={`New ${props.label.toLowerCase()} page`} onClick={(e) => { e.stopPropagation(); expand(key()); startCreate(props.section, null, 'page') }}><PlusIcon size={14} /></button>
           </span>
         </div>
-        <Show when={open()}>
+        <Reveal when={open()}>
           <PageTree section={props.section} depth={2} />
-        </Show>
+        </Reveal>
       </>
     )
   }
@@ -496,7 +497,7 @@ export default function Explorer() {
             </Show>
           </span>
         </div>
-        <Show when={open()}><div class="secbody">{props.children}</div></Show>
+        <Reveal when={open()}><div class="secbody">{props.children}</div></Reveal>
       </div>
     )
   }

@@ -142,6 +142,9 @@ body{ background:var(--bg); color:var(--ink); overflow:hidden;
 .recent-path{ font-size:11px; color:var(--faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .modal-foot{ display:flex; justify-content:flex-end; align-items:center; gap:8px; padding:10px 14px; border-top:1px solid var(--border); }
 .modal-foot .left{ margin-right:auto; }
+
+/* animated reveal boxes (components/Reveal.jsx) */
+.reveal-in{ display:flow-root; }
 .modal-cancel{ font:inherit; font-size:12.5px; color:var(--dim); background:transparent; border:1px solid var(--border); border-radius:7px; padding:6px 12px; cursor:pointer; }
 .modal-cancel:hover{ color:var(--ink); }
 .modal-go{ font:inherit; font-size:12.5px; color:#fff; background:var(--accent); border:0; border-radius:7px; padding:6px 14px; cursor:pointer; }
@@ -296,14 +299,12 @@ body{ background:var(--bg); color:var(--ink); overflow:hidden;
 ::selection{ background:var(--sel); }
 
 /* ---------- Right dock ---------- */
-.dock{ background:var(--panel); border-left:1px solid var(--border); display:flex; flex-direction:column; min-height:0; }
-.pane{ display:flex; flex-direction:column; min-height:0; border-bottom:1px solid var(--border); }
-.pane.cast{ flex:0 0 auto; max-height:42%; }
-.pane.plan{ flex:1; }
-.pane.collapsed{ flex:0 0 auto; }
+/* the whole panel scrolls; each pane keeps its natural height (binder artifact) */
+.dock{ background:var(--panel); border-left:1px solid var(--border); display:flex; flex-direction:column; min-height:0; overflow-y:auto; }
+.pane{ display:flex; flex-direction:column; border-bottom:1px solid var(--border); flex:none; }
 .pane.collapsed .pbody{ display:none; }
 .pane.collapsed .pbar{ border-bottom:0; }
-.pbar{ display:flex; align-items:center; gap:7px; height:30px; padding:0 8px 0 10px;
+.pbar{ display:flex; align-items:center; gap:7px; height:30px; padding:0 8px 0 10px; flex:none;
        background:var(--chrome); border-bottom:1px solid var(--border); }
 .pbar .cx{ color:var(--faint); cursor:pointer; width:16px; display:grid; place-items:center; background:transparent; border:0; }
 .pbar .t{ font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--dim); font-weight:600; }
@@ -319,7 +320,7 @@ body{ background:var(--bg); color:var(--ink); overflow:hidden;
 .dock-nav .nav:hover{ background:var(--accent-soft); color:var(--ink); }
 .dock-pick{ flex:1; min-width:0; font:inherit; font-size:11px; color:var(--ink); background:var(--bg); border:1px solid var(--border2); border-radius:6px; padding:3px 7px; outline:0; cursor:pointer; }
 .dock-pick:hover{ border-color:var(--accent); }
-.pbody{ overflow-y:auto; padding:9px; }
+.pbody{ padding:9px; }
 
 .clist{ display:flex; flex-direction:column; gap:5px; }
 .card{ display:flex; align-items:center; gap:9px; padding:6px 8px; border-radius:9px; background:var(--bg); border:1px solid var(--border2); min-width:0; cursor:pointer; }

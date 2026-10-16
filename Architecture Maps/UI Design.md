@@ -31,6 +31,24 @@ describe the app to the user inside the app (e.g. never "a project is a folder o
 files…", "everything stays on your machine"). Empty states and errors may give a short,
 functional instruction, but no prose padding.
 
+## Reveal boxes are animated (author, 2026-10-16)
+
+Anything that expands and collapses (sidebar sections, tree folders and arcs, right-panel
+panes like Topics, Outline arcs, an Outline card opening for editing) animates:
+
+- **Opening:** the height grows to fit while the contents stay **transparent**; once the
+  box is full height, the contents fade in.
+- **Closing:** the contents fade out first, then the height shrinks away.
+- Toggling mid-animation continues from where it is; "reduce motion" in the OS snaps instead.
+
+Use `Reveal` (`<Reveal when={open()}>…</Reveal>`) for content that mounts and unmounts, and
+`morph` / `togglePane` from `components/Reveal.jsx` for layout changes that swap or resize
+existing boxes. New collapsibles use these; don't add a bare `<Show>` for a reveal.
+
+The right panel scrolls as a whole and each pane keeps its natural height (as in the binder
+artifact); panes no longer split the panel's height, which squeezed Chapter plan and Topics
+to less than their headers on shorter windows.
+
 ## Implemented layout behaviors (current build — durable record)
 
 These are decided and built in `Main/Client`; keep them:
