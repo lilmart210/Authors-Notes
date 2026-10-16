@@ -171,10 +171,14 @@ File → Export… or **Export book…** on Publishing. Choices are organized by
   Instant, Runs on CPU, Needs a GPU). Download on the right becomes Remove once downloaded.
 - The prototype's list is an **example** (2024-era open models, approximate 4-bit download
   sizes). The author will curate the real list.
-- Runtime, recommended and **pending the author's decision:** llama.cpp `llama-server` as an
-  on-demand-downloaded sidecar (same pattern as Pandoc, no Python). It runs GGUF models from
-  Hugging Face stored in app data, checked by hash, over localhost OpenAI-style HTTP with
-  streaming. A Python process over WebSocket was rejected as too heavy;
+- **Models folder (author, 2026-10-16):** one app-wide setting for where models are
+  downloaded to and loaded from, not per project. It can point at a NAS share or mapped
+  drive so models don't take local disk space. Model files the user copied there by hand
+  show up too.
+- Runtime, recommended and **pending the author's decision:** llama.cpp `llama-server` as a
+  sidecar process (no Python). It runs GGUF models from Hugging Face out of the models
+  folder, checked by hash, over localhost OpenAI-style HTTP with streaming. (Pandoc, by
+  contrast, ships inside the installer.) A Python process over WebSocket was rejected as too heavy;
   transformers.js / WebGPU is a fallback for tiny models only.
 - "The AI can do whatever the user can do" requires turning `ProjectContext` actions into
   **one command registry** used by both the UI and the AI, with confirm and undo.
